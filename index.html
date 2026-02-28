@@ -1,0 +1,3033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Automation Pro</title>
+<style>
+@import url('https://fonts.bunny.net/css?family=geist:300,400,500,600,700&family=geist-mono:400,500&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0f14; --surface: #161a22; --surface2: #1e2330; --surface3: #252b3b;
+  --border: #2a3147; --accent: #4f8ef7; --accent-dim: rgba(79,142,247,0.15);
+  --green: #22c55e; --red: #ef4444; --amber: #f59e0b; --purple: #a855f7;
+  --text: #e8ecf4; --text2: #8a93a8; --text3: #566070;
+  --radius: 10px; --radius-lg: 16px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --font-head: 'Geist Mono', 'Courier New', monospace;
+  --font-body: 'Geist', system-ui, sans-serif;
+}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; }
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+#sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; -webkit-app-region: drag; }
+.sidebar-top { padding: 20px 16px 12px; border-bottom: 1px solid var(--border); }
+.app-name { font-family: var(--font-head); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.app-sub { font-size: 11px; color: var(--text3); }
+.nav { padding: 12px 8px; flex: 1; -webkit-app-region: no-drag; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text2); transition: all .15s; margin-bottom: 2px; -webkit-app-region: no-drag; }
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-bottom { padding: 12px 8px; border-top: 1px solid var(--border); -webkit-app-region: no-drag; }
+#authPill { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--surface2); cursor: pointer; font-size: 12px; color: var(--text2); transition: background .15s; }
+#authPill:hover { background: var(--surface3); }
+.auth-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.auth-dot.ok { background: var(--green); }
+
+/* ── MAIN ── */
+#main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.page { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.page.active { display: flex; }
+.page-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.page-title { font-size: 18px; font-weight: 600; }
+.page-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.page-body { flex: 1; overflow-y: auto; padding: 24px 28px 60px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; font-family: inherit; transition: all .15s; font-weight: 500; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #3a7df5; }
+.btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface3); color: var(--text); }
+.btn-danger { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.2); }
+.btn-danger:hover { background: rgba(239,68,68,.2); }
+.btn-purple { background: rgba(168,85,247,.15); color: var(--purple); border: 1px solid rgba(168,85,247,.3); }
+.btn-purple:hover { background: rgba(168,85,247,.25); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 6px 8px; }
+.ml-auto { margin-left: auto; }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; padding: 9px 12px; font-size: 13px; outline: none; transition: border-color .15s; }
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text3); }
+textarea.form-input { resize: vertical; min-height: 80px; }
+select.form-input { cursor: pointer; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
+.badge-red    { background: rgba(239,68,68,.15);  color: var(--red); }
+.badge-blue   { background: var(--accent-dim);    color: var(--accent); }
+.badge-amber  { background: rgba(245,158,11,.15); color: var(--amber); }
+.badge-purple { background: rgba(168,85,247,.15); color: var(--purple); }
+
+/* ── TASK CARDS ── */
+.task-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 12px; transition: border-color .15s; }
+.task-card:hover { border-color: var(--accent); }
+.task-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.task-name { font-size: 15px; font-weight: 600; }
+.task-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.task-pairs { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.pair-row { background: var(--surface2); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+.pair-name { font-weight: 600; color: var(--text); min-width: 80px; }
+.pair-arrow { color: var(--accent); }
+.pair-path { font-family: var(--font-head); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.task-actions { margin-top: 14px; display: flex; gap: 8px; }
+
+/* ── TOGGLE ── */
+.toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; display: inline-block; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--surface3); border-radius: 20px; transition: .2s; }
+.toggle-slider::before { content:''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: var(--text3); border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(16px); background: #fff; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 640px; max-height: 88vh; overflow-y: auto; padding: 28px; box-shadow: var(--shadow); }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+
+/* ── PAIR EDITOR ── */
+.pair-editor { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.pair-editor-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+/* ── FILE CHIPS ── */
+.file-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; margin: 3px; }
+.file-chip-remove { cursor: pointer; color: var(--text3); }
+.file-chip-remove:hover { color: var(--red); }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 12px; text-align: left; font-size: 12px; border-bottom: 1px solid var(--border); }
+th { color: var(--text2); font-weight: 600; background: var(--surface2); }
+td { color: var(--text); }
+tr:last-child td { border-bottom: none; }
+.mono { font-family: var(--font-head); font-size: 11px; color: var(--text2); }
+
+/* ── CONTACTS ── */
+.contact-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; transition: border-color .15s; }
+.contact-card:hover { border-color: var(--accent); }
+.contact-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.contact-info { flex: 1; min-width: 0; }
+.contact-name { font-weight: 600; margin-bottom: 2px; }
+.contact-email { font-size: 12px; color: var(--text2); }
+.contact-keys { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.contact-actions { display: flex; gap: 6px; }
+
+/* ── ENC MODE SELECTOR ── */
+.enc-mode-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.enc-mode-btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); transition: all .15s; font-family: inherit; }
+.enc-mode-btn.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+.enc-mode-btn:hover:not(.selected) { background: var(--surface3); color: var(--text); }
+.enc-mode-desc { margin-top: 10px; font-size: 12px; color: var(--text2); background: var(--surface2); border-radius: 8px; padding: 10px 12px; line-height: 1.5; }
+
+/* ── MY KEYS ── */
+.keys-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+.keys-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.key-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+.key-label { color: var(--text2); min-width: 110px; }
+.key-value { font-family: var(--font-head); font-size: 11px; background: var(--surface2); padding: 4px 8px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px; color: var(--text); }
+.key-check { color: var(--green); }
+.key-x { color: var(--text3); }
+
+/* ── SEND PAGE ── */
+.send-wrap { max-width: 680px; }
+.file-drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; color: var(--text3); font-size: 13px; cursor: pointer; transition: all .15s; margin-bottom: 8px; }
+.file-drop-zone:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── ENC INDICATOR ── */
+.enc-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+.enc-none         { background: rgba(86,96,112,.15); color: var(--text3); border: 1px solid var(--border); }
+.enc-selfcontained { background: rgba(245,158,11,.1); color: var(--amber); border: 1px solid rgba(245,158,11,.3); }
+.enc-registry     { background: rgba(34,197,94,.1);  color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+.enc-openpgp      { background: rgba(168,85,247,.1); color: var(--purple); border: 1px solid rgba(168,85,247,.3); }
+/* Password protect row */
+.pw-row { display:none; margin-bottom:14px; padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; }
+.pw-row.visible { display:block; }
+.pw-gen-wrap { display:flex; gap:8px; margin-top:8px; align-items:center; }
+.pw-gen-wrap input { flex:1; font-family:monospace; letter-spacing:.06em; }
+/* Password delivery modal */
+.pw-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9000; display:flex; align-items:center; justify-content:center; }
+.pw-modal-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:32px; max-width:420px; width:90%; text-align:center; }
+.pw-modal-title { font-size:18px; font-weight:700; margin-bottom:6px; }
+.pw-modal-sub { font-size:12px; color:var(--text3); margin-bottom:20px; line-height:1.6; }
+.pw-display { font-family:monospace; font-size:22px; letter-spacing:.08em; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 16px; margin-bottom:16px; word-break:break-all; color:var(--text); }
+.pw-qr { margin:0 auto 16px; width:200px; height:200px; border-radius:8px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; }
+.pw-qr img { width:100%; height:100%; }
+.pw-actions { display:flex; flex-direction:column; gap:8px; }
+
+/* ── RECEIPT ── */
+.receipt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; }
+.receipt-info { flex: 1; min-width: 0; }
+.receipt-title { font-weight: 600; margin-bottom: 4px; }
+.receipt-meta { font-size: 12px; color: var(--text2); line-height: 1.6; }
+.receipt-files { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── STATUS BAR ── */
+#statusBar { position: fixed; bottom: 0; right: 0; left: 220px; padding: 6px 20px; background: var(--surface); border-top: 1px solid var(--border); font-size: 11px; color: var(--text3); display: flex; gap: 16px; align-items: center; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── VOICE ── */
+#voiceBtn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex-shrink: 0; transition: all .15s; }
+#voiceBtn.recording { background: rgba(239,68,68,.15); border-color: var(--red); animation: pulse 1s infinite; }
+
+/* ── SCHED ── */
+.sched-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.day-check { display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; }
+.day-check input { cursor: pointer; }
+
+/* ── EMPTY ── */
+.empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; }
+
+/* ── NOTIFICATION ── */
+.notif { position: fixed; bottom: 36px; right: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 13px; box-shadow: var(--shadow); z-index: 2000; opacity: 0; transform: translateY(10px); transition: all .3s; max-width: 320px; }
+.notif.show { opacity: 1; transform: translateY(0); }
+.notif.notif-ok  { border-color: var(--green); }
+.notif.notif-err { border-color: var(--red); }
+
+/* ── PGP textarea ── */
+.pgp-textarea { font-family: var(--font-head); font-size: 11px; min-height: 120px; }
+
+/* ── KEY EXPORT BOX ── */
+.export-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: var(--font-head); font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; color: var(--text2); }
+
+/* ── USER GUIDE BUTTON ── */
+.guide-btn { display: flex; align-items: center; gap: 8px; padding: 9px 10px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--amber); background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.2); transition: all .15s; position: relative; }
+.guide-btn:hover { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.4); }
+.guide-badge { margin-left: auto; background: var(--amber); color: #000; font-size: 10px; font-weight: 900; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+/* ── GUIDE MODAL ── */
+.guide-modal { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: flex-start; justify-content: center; z-index: 2000; backdrop-filter: blur(8px); overflow-y: auto; padding: 40px 20px; }
+.guide-modal.open { display: flex; }
+.guide-doc { background: #fff; color: #1a1a2e; width: 100%; max-width: 820px; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.6); }
+.guide-doc-header { background: linear-gradient(135deg, #1e2330 0%, #0d1117 100%); color: #fff; padding: 36px 48px 32px; position: relative; }
+.guide-doc-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -.02em; }
+.guide-doc-header p { color: rgba(255,255,255,.6); font-size: 14px; }
+.guide-version { position: absolute; top: 20px; right: 20px; background: rgba(79,142,247,.2); border: 1px solid rgba(79,142,247,.4); color: #4f8ef7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.guide-toc { background: #f8f9ff; border-bottom: 1px solid #e4e6f0; padding: 16px 48px; display: flex; gap: 6px; flex-wrap: wrap; }
+.guide-toc a { color: #3b5bdb; font-size: 12px; text-decoration: none; padding: 3px 8px; border-radius: 4px; transition: background .15s; }
+.guide-toc a:hover { background: rgba(59,91,219,.1); }
+.guide-body { padding: 40px 48px 60px; }
+.guide-body h2 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e8ecf8; display: flex; align-items: center; gap: 10px; }
+.guide-body h2:first-child { margin-top: 0; }
+.guide-body h3 { font-size: 15px; font-weight: 700; color: #2d3561; margin: 20px 0 8px; }
+.guide-body p { font-size: 13.5px; color: #3d4466; line-height: 1.75; margin-bottom: 12px; }
+.guide-body ul, .guide-body ol { padding-left: 22px; margin-bottom: 12px; }
+.guide-body li { font-size: 13.5px; color: #3d4466; line-height: 1.75; margin-bottom: 4px; }
+.guide-body code { background: #eef0fa; color: #2d3561; padding: 1px 5px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; }
+.guide-body pre { background: #1a1a2e; color: #e8ecf4; padding: 16px 20px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin-bottom: 16px; line-height: 1.6; }
+.guide-callout { border-radius: 8px; padding: 12px 16px; margin: 16px 0; font-size: 13px; line-height: 1.6; }
+.guide-callout.tip   { background: #f0fdf4; border-left: 4px solid #22c55e; color: #14532d; }
+.guide-callout.warn  { background: #fffbeb; border-left: 4px solid #f59e0b; color: #713f12; }
+.guide-callout.info  { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e3a5f; }
+.guide-callout.sec   { background: #fdf4ff; border-left: 4px solid #a855f7; color: #4a044e; }
+.guide-shortcut-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+.guide-shortcut-table th { text-align: left; padding: 8px 12px; background: #f0f2ff; color: #2d3561; font-weight: 700; }
+.guide-shortcut-table td { padding: 8px 12px; border-bottom: 1px solid #e8ecf8; color: #3d4466; }
+.guide-shortcut-table kbd { background: #1a1a2e; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-family: monospace; }
+.guide-enc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.guide-enc-card { border-radius: 8px; padding: 14px; border: 1px solid; }
+.guide-enc-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.guide-enc-card p  { font-size: 12px; margin: 0; line-height: 1.5; }
+.guide-enc-self   { background: #fffbeb; border-color: #fde68a; color: #713f12; }
+.guide-enc-reg    { background: #f0fdf4; border-color: #bbf7d0; color: #14532d; }
+.guide-enc-pgp    { background: #fdf4ff; border-color: #e9d5ff; color: #4a044e; }
+.guide-enc-none   { background: #f8fafc; border-color: #e2e8f0; color: #475569; }
+.guide-step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+.guide-step-num { background: #3b5bdb; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+.guide-step-body { flex: 1; font-size: 13.5px; color: #3d4466; line-height: 1.7; }
+.guide-close-btn { position: sticky; top: 12px; float: right; background: rgba(255,255,255,.9); border: 1px solid #dde; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 600; color: #444; backdrop-filter: blur(8px); margin: 12px 12px 0 0; z-index: 10; }
+.guide-close-btn:hover { background: #fff; }
+
+/* ── YOUTUBE PAGE ── */
+.yt-wrap { max-width: 760px; }
+.yt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 20px; }
+.yt-thumbnail { width: 100%; height: 200px; object-fit: cover; display: block; background: var(--surface2); }
+.yt-info { padding: 16px 20px; }
+.yt-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.yt-meta  { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+.yt-desc  { font-size: 12px; color: var(--text3); line-height: 1.5; }
+.format-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.format-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all .15s; text-align: center; }
+.format-chip:hover { border-color: var(--accent); }
+.format-chip.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.format-chip .fc-label { font-size: 12px; font-weight: 600; }
+.format-chip .fc-meta  { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.format-chip.selected .fc-meta { color: var(--accent); opacity: .7; }
+.yt-progress { background: var(--surface2); border-radius: 8px; height: 8px; overflow: hidden; margin: 12px 0; }
+.yt-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 8px; transition: width .3s; }
+.yt-status { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.transcript-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; max-height: 300px; overflow-y: auto; font-size: 13px; line-height: 1.75; white-space: pre-wrap; margin-top: 16px; }
+.transcript-seg { padding: 4px 0; border-bottom: 1px solid var(--border); }
+.transcript-seg:last-child { border: none; }
+.seg-time { color: var(--accent); font-family: var(--font-head); font-size: 11px; min-width: 50px; display: inline-block; }
+.export-fmt-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.export-fmt-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); transition: all .15s; font-family: inherit; font-weight: 600; }
+.export-fmt-btn.on { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 10px; }
+.lang-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-size: 13px; font-family: inherit; outline: none; width: 100%; cursor: pointer; }
+
+
+/* ── AUTH WARNING BANNER ── */
+#authWarningBanner { display:none; background: linear-gradient(90deg,rgba(245,158,11,.15),rgba(245,158,11,.08)); border-bottom: 1px solid rgba(245,158,11,.3); padding: 8px 20px; font-size: 12px; color: var(--amber); align-items:center; gap: 10px; }
+#authWarningBanner.visible { display:flex; }
+
+#authWarningBanner a { color: var(--amber); text-decoration: underline; cursor: pointer; font-weight: 700; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══ LICENCE ACTIVATION ═══
+     Shown on first run or if no valid licence is stored.
+     Dismissed automatically if a valid stored licence is found.
+-->
+<div id="licenceOverlay" style="
+  position:fixed;inset:0;z-index:100000;
+  background:#0d1117;
+  display:none;align-items:center;justify-content:center;
+  font-family:system-ui,-apple-system,sans-serif;
+">
+  <div style="
+    max-width:520px;width:90%;
+    background:#161b22;
+    border:1px solid #30363d;
+    border-radius:16px;
+    padding:40px 44px;
+    box-shadow:0 24px 64px rgba(0,0,0,.6);
+  ">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px">
+      <div style="
+        width:48px;height:48px;border-radius:12px;
+        background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.3);
+        display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0
+      ">🔐</div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#f0f6fc;letter-spacing:-.01em">
+          Email Automation Pro
+        </div>
+        <div style="font-size:12px;color:#8b949e;margin-top:2px;letter-spacing:.04em;text-transform:uppercase">
+          Licence Activation
+        </div>
+      </div>
+    </div>
+
+    <div id="licenceCheckingMsg" style="text-align:center;padding:20px 0;color:#8b949e;font-size:13px">
+      Checking licence…
+    </div>
+
+    <div id="licenceForm" style="display:none">
+      <p style="font-size:13px;color:#8b949e;margin-bottom:20px;line-height:1.6">
+        Enter your email and licence key below.
+        For support or to purchase a licence contact
+        <strong style="color:#58a6ff">accounts@thewrightsupport.com</strong>
+      </p>
+
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Email Address</label>
+        <input id="licenceEmail" type="email" placeholder="your@email.com"
+          style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;padding:10px 14px;outline:none;box-sizing:border-box;"
+          oninput="clearLicenceError()"
+          onkeydown="if(event.key==='Enter')document.getElementById('licenceKeyInput').focus()">
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+          Licence Key <span style="font-weight:400;color:#484f58">(leave blank if owner)</span>
+        </label>
+        <input id="licenceKeyInput" type="text" placeholder="SWEP1-XXXXX-XXXXX-XXXXX-XXXXX" maxlength="29"
+          style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:15px;padding:10px 14px;outline:none;box-sizing:border-box;font-family:monospace;letter-spacing:.08em;text-transform:uppercase;"
+          oninput="formatLicenceKey(this);clearLicenceError()"
+          onkeydown="if(event.key==='Enter')handleLicenceContinue()">
+      </div>
+
+      <div id="licenceError" style="display:none;padding:10px 14px;margin-bottom:16px;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:6px;font-size:12px;color:#f85149;"></div>
+
+      <button onclick="handleLicenceContinue()" id="licenceActivateBtn"
+        style="width:100%;padding:13px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#1f6feb;color:#fff;transition:background .15s;"
+        onmouseenter="this.style.background='#388bfd'" onmouseleave="this.style.background='#1f6feb'">
+        Continue
+      </button>
+
+      <div id="devKeySection" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #21262d">
+        <div style="font-size:11px;color:#484f58;margin-bottom:8px;text-align:center;text-transform:uppercase;letter-spacing:.06em">Developer Tools</div>
+        <button onclick="generateDevKey()"
+          style="width:100%;padding:10px;border:1px solid #30363d;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#8b949e;transition:all .15s;"
+          onmouseenter="this.style.borderColor='#58a6ff';this.style.color='#58a6ff'"
+          onmouseleave="this.style.borderColor='#30363d';this.style.color='#8b949e'">
+          🔧 Generate My Lifetime Key
+        </button>
+        <div id="devKeyOutput" style="display:none;margin-top:10px;padding:10px 12px;background:#0d1117;border:1px solid #21262d;border-radius:6px;font-family:monospace;font-size:13px;color:#3fb950;letter-spacing:.06em;text-align:center"></div>
+      </div>
+    </div>
+
+    <!-- Already-licenced info panel (shown briefly before continuing) -->
+    <div id="licenceValidPanel" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:32px;margin-bottom:12px">✅</div>
+      <div style="font-size:15px;font-weight:600;color:#3fb950;margin-bottom:6px">Licence Valid</div>
+      <div id="licenceValidInfo" style="font-size:12px;color:#8b949e;line-height:1.7"></div>
+    </div>
+
+    <div style="margin-top:20px;font-size:11px;color:#484f58;text-align:center">
+      Email Automation Pro · Developer: Spike Wright · England &amp; Wales<br>
+      <span style="color:#388bfd">accounts@thewrightsupport.com</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Licence boot check — runs immediately on page load ──
+async function bootLicenceCheck() {
+  try {
+    const stored = await Promise.race([
+      window.API.getLicence(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+    ]);
+
+    if (stored && stored.key && stored.email) {
+      try {
+        const result = await Promise.race([
+          window.API.validateLicence(stored.key, stored.email),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+        ]);
+        if (result.valid) {
+          // Owner email — straight into app, no disclaimer
+          const OWNER_EMAILS = ['spike@thewrightsupport.com'];
+          if (OWNER_EMAILS.includes((stored.email||'').toLowerCase().trim())) {
+            document.getElementById('licenceOverlay').style.display = 'none';
+            return;
+          }
+          showLicenceValid(stored.email, stored.expiry);
+          setTimeout(dismissLicenceOverlay, 1800);
+          return;
+        }
+      } catch {}
+    }
+  } catch {}
+
+  // No valid licence — show the entry form
+  document.getElementById('licenceCheckingMsg').style.display = 'none';
+  document.getElementById('licenceForm').style.display = 'block';
+  document.getElementById('devKeySection').style.display = 'block';
+  setTimeout(() => document.getElementById('licenceEmail').focus(), 50);
+}
+
+function formatLicenceKey(input) {
+  let val = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // Insert dashes at positions 5, 10, 15, 20
+  let out = '';
+  for (let i = 0; i < val.length && i < 25; i++) {
+    if (i > 0 && i % 5 === 0) out += '-';
+    out += val[i];
+  }
+  input.value = out;
+}
+
+function clearLicenceError() {
+  document.getElementById('licenceError').style.display = 'none';
+}
+
+function showLicenceError(msg) {
+  const el = document.getElementById('licenceError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function showLicenceValid(email, expiry) {
+  document.getElementById('licenceCheckingMsg').style.display = 'none';
+  document.getElementById('licenceForm').style.display        = 'none';
+  document.getElementById('licenceValidPanel').style.display  = 'block';
+  const lifetime = expiry === '2099-12';
+  document.getElementById('licenceValidInfo').innerHTML =
+    `Licensed to: <strong style="color:#e6edf3">${email}</strong><br>` +
+    `Expires: <strong style="color:#e6edf3">${lifetime ? 'Lifetime' : expiry}</strong>`;
+}
+
+// ── Licence — single entry point for both owner and normal users ────────────
+const LICENCE_OWNER_EMAILS = ['spike@thewrightsupport.com'];
+
+async function handleLicenceContinue() {
+  const email = (document.getElementById('licenceEmail').value || '').trim();
+  const key   = (document.getElementById('licenceKeyInput').value || '').trim();
+  const btn   = document.getElementById('licenceActivateBtn');
+
+  if (!email) { showLicenceError('Please enter your email address.'); return; }
+
+  btn.textContent = 'Please wait…';
+  btn.disabled    = true;
+
+  try {
+    // Owner path — no key required
+    if (LICENCE_OWNER_EMAILS.includes(email.toLowerCase())) {
+      const res = await window.API.ownerLogin(email);
+      if (res && res.valid) {
+        document.getElementById('licenceOverlay').style.display    = 'none';
+        document.getElementById('disclaimerOverlay').style.display = 'none';
+        return;
+      }
+      // Shouldn't happen, but handle gracefully
+      showLicenceError('Owner login failed. Contact accounts@thewrightsupport.com');
+      btn.textContent = 'Continue';
+      btn.disabled    = false;
+      return;
+    }
+
+    // Normal user — key required
+    if (!key) { showLicenceError('Please enter your licence key.'); btn.textContent = 'Continue'; btn.disabled = false; return; }
+    const result = await window.API.validateLicence(key, email);
+    if (result && result.valid) {
+      showLicenceValid(email, result.expiry);
+      setTimeout(dismissLicenceOverlay, 1800);
+    } else {
+      showLicenceError(result?.reason || 'Invalid key. Contact accounts@thewrightsupport.com');
+      btn.textContent = 'Continue';
+      btn.disabled    = false;
+    }
+  } catch (err) {
+    showLicenceError('An error occurred. Please try again.');
+    btn.textContent = 'Continue';
+    btn.disabled    = false;
+  }
+}
+
+async function generateDevKey() {
+  const email = document.getElementById('licenceEmail').value.trim();
+  if (!email) { showLicenceError('Enter your email address first.'); return; }
+  const result = await window.API.generateDevKey(email);
+  if (result?.error) { showLicenceError(result.error); return; }
+  const out = document.getElementById('devKeyOutput');
+  out.textContent = result.key;
+  out.style.display = 'block';
+  document.getElementById('licenceKeyInput').value = result.key;
+  await handleLicenceContinue();
+}
+
+function dismissLicenceOverlay() {
+  const overlay = document.getElementById('licenceOverlay');
+  overlay.style.opacity    = '0';
+  overlay.style.transition = 'opacity .4s ease';
+  setTimeout(() => {
+    overlay.remove();
+    showIntroVideo();
+  }, 420);
+}
+
+// Wait for window.API (preload) to be ready before checking licence
+function waitForAPI(fn, attempts = 0) {
+  if (window.API && window.API.getLicence) {
+    fn();
+  } else if (attempts < 20) {
+    setTimeout(() => waitForAPI(fn, attempts + 1), 100);
+  } else {
+    // API never appeared — show form anyway so user isn't stuck
+    document.getElementById('licenceCheckingMsg').style.display = 'none';
+    document.getElementById('licenceForm').style.display = 'block';
+  }
+}
+// On load: check if owner is already stored — if so skip everything.
+// Otherwise disclaimer shows first (display:flex below).
+// Wrapped in DOMContentLoaded so disclaimerOverlay exists before we touch it.
+document.addEventListener('DOMContentLoaded', function() {
+  waitForAPI(async function ownerEarlyCheck() {
+    try {
+      const OWNER = ['spike@thewrightsupport.com'];
+      const stored = await window.API.getLicence();
+      if (stored && OWNER.includes((stored.email||'').toLowerCase().trim())) {
+        document.getElementById('disclaimerOverlay').style.display = 'none';
+        document.getElementById('licenceOverlay').style.display    = 'none';
+      }
+    } catch(e) {}
+  });
+});
+</script>
+
+<div id="disclaimerOverlay" style="
+  position:fixed;inset:0;z-index:99999;
+  background:#0d1117;
+  display:flex;align-items:center;justify-content:center;
+  font-family:system-ui,-apple-system,sans-serif;
+">
+  <div style="
+    max-width:680px;width:90%;
+    background:#161b22;
+    border:1px solid #30363d;
+    border-radius:16px;
+    padding:40px 44px;
+    box-shadow:0 24px 64px rgba(0,0,0,.6);
+  ">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px">
+      <div style="
+        width:48px;height:48px;border-radius:12px;
+        background:rgba(248,81,73,.15);border:1px solid rgba(248,81,73,.4);
+        display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0
+      ">⚠️</div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#f0f6fc;letter-spacing:-.01em">
+          Email Automation Pro
+        </div>
+        <div style="font-size:12px;color:#8b949e;margin-top:2px;letter-spacing:.04em;text-transform:uppercase">
+          End-User Licence Agreement &amp; Disclaimer of Liability
+        </div>
+      </div>
+    </div>
+
+    <!-- Legal text -->
+    <div style="
+      background:#0d1117;
+      border:1px solid #21262d;
+      border-radius:8px;
+      padding:20px 22px;
+      max-height:340px;
+      overflow-y:auto;
+      font-size:12.5px;
+      line-height:1.75;
+      color:#c9d1d9;
+      margin-bottom:24px;
+    ">
+      <p style="font-size:13px;font-weight:700;color:#f85149;margin-bottom:10px;letter-spacing:.02em">
+        READ THIS AGREEMENT CAREFULLY BEFORE USING THIS SOFTWARE.
+        BY PROCEEDING YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD,
+        AND AGREE TO BE BOUND BY ALL TERMS BELOW.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">1. SOFTWARE PROVIDED "AS IS"</p>
+      <p style="margin-bottom:14px">
+        This software is provided by Spike Wright ("the Developer") strictly on an
+        <strong style="color:#e6edf3">"AS IS" and "AS AVAILABLE"</strong> basis, without warranty of any kind,
+        express or implied. The Developer makes no representations or warranties whatsoever regarding
+        fitness for a particular purpose, merchantability, accuracy, reliability, or uninterrupted
+        operation. You assume sole and complete responsibility for the selection of this software to
+        achieve your intended results, and for the installation, use, and results obtained from it.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">2. ABSOLUTE LIMITATION OF LIABILITY</p>
+      <p style="margin-bottom:14px">
+        To the fullest extent permitted by applicable law, Spike Wright shall not be liable for
+        <strong style="color:#e6edf3">any damages whatsoever</strong>, including but not limited to:
+        loss of data, loss of profits, loss of business, loss of revenue, domain blacklisting,
+        email service suspension, reputational damage, financial loss, corruption of files or databases,
+        exposure of confidential information, encryption failures, decryption failures, or any other
+        direct, indirect, incidental, special, consequential, or punitive damages — regardless of
+        whether such damages were foreseeable and regardless of whether the Developer was advised
+        of the possibility of such damages.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">3. BACKUP RESPONSIBILITY</p>
+      <p style="margin-bottom:14px">
+        <strong style="color:#f0883e">You are solely responsible for maintaining adequate backups
+        of all data before using this software.</strong> The Developer assumes zero responsibility
+        for any data loss, however caused, including data loss arising from defects in the software,
+        system failures, or user error. You must maintain independent backups of all critical data
+        at all times. Do not rely on this software as your sole means of data retention.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">4. EMAIL &amp; COMMUNICATIONS</p>
+      <p style="margin-bottom:14px">
+        This software sends emails on your behalf using credentials you provide. You accept full
+        responsibility for all emails sent, including compliance with anti-spam laws (CAN-SPAM,
+        GDPR, PECR), your email provider's terms of service, and any consequences arising from
+        automated sending, including but not limited to account suspension or domain blacklisting.
+        The Developer shall not be liable for any such consequences.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">5. ENCRYPTION &amp; SECURITY</p>
+      <p style="margin-bottom:14px">
+        While this software implements encryption features, the Developer makes no guarantee that
+        such features are free from defects, vulnerabilities, or implementation errors. You accept
+        sole responsibility for the security of any data processed by this software. The Developer
+        shall not be liable for any breach, exposure, or unauthorised access to data, however caused.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">6. NO PROFESSIONAL ADVICE</p>
+      <p style="margin-bottom:14px">
+        Nothing in this software constitutes legal, financial, medical, or professional advice of
+        any kind. Use of this software does not create any professional relationship between you
+        and the Developer.
+      </p>
+
+      <p style="font-weight:700;color:#e6edf3;margin-bottom:4px">7. GOVERNING LAW</p>
+      <p style="margin-bottom:0">
+        This agreement shall be governed by the laws of England and Wales. Any disputes arising
+        from the use of this software shall be subject to the exclusive jurisdiction of the courts
+        of England and Wales.
+      </p>
+    </div>
+
+    <!-- Checkbox row -->
+    <label id="disclaimerCheckLabel" style="
+      display:flex;align-items:flex-start;gap:12px;
+      cursor:pointer;margin-bottom:22px;
+      padding:14px 16px;
+      border:1px solid #30363d;
+      border-radius:8px;
+      background:#0d1117;
+      transition:border-color .15s;
+    " onmouseenter="this.style.borderColor='#58a6ff'" onmouseleave="this.style.borderColor=disclaimerCheckbox.checked?'#58a6ff':'#30363d'">
+      <input type="checkbox" id="disclaimerCheckbox" onchange="onDisclaimerCheck()" style="
+        width:18px;height:18px;flex-shrink:0;margin-top:1px;
+        accent-color:#58a6ff;cursor:pointer;
+      ">
+      <span style="font-size:13px;color:#c9d1d9;line-height:1.5;user-select:none">
+        I have read and understood the above terms and conditions. I agree to be bound by this
+        End-User Licence Agreement and acknowledge that
+        <strong style="color:#e6edf3">Spike Wright bears no liability whatsoever</strong>
+        for any loss, damage, or consequence arising from my use of this software.
+      </span>
+    </label>
+
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px">
+      <button id="disclaimerAgreeBtn"
+        onclick="acceptDisclaimer()"
+        disabled
+        style="
+          flex:1;padding:13px;border:none;border-radius:8px;
+          font-size:14px;font-weight:600;cursor:not-allowed;
+          background:#21262d;color:#484f58;
+          transition:all .15s;
+        ">
+        ✓ I Agree — Continue
+      </button>
+      <button
+        onclick="rejectDisclaimer()"
+        style="
+          padding:13px 20px;border:1px solid #30363d;border-radius:8px;
+          font-size:14px;font-weight:600;cursor:pointer;
+          background:transparent;color:#8b949e;
+          transition:all .15s;
+        "
+        onmouseenter="this.style.borderColor='#f85149';this.style.color='#f85149'"
+        onmouseleave="this.style.borderColor='#30363d';this.style.color='#8b949e'">
+        ✕ Disagree — Exit
+      </button>
+    </div>
+
+    <div style="margin-top:14px;font-size:11px;color:#484f58;text-align:center">
+      Email Automation Pro · Developer: Spike Wright · England &amp; Wales
+    </div>
+  </div>
+</div>
+
+<script>
+// Disclaimer must be resolved before anything else runs.
+// Declared in inline script so it is available immediately.
+function onDisclaimerCheck() {
+  const cb  = document.getElementById('disclaimerCheckbox');
+  const btn = document.getElementById('disclaimerAgreeBtn');
+  const lbl = document.getElementById('disclaimerCheckLabel');
+  if (cb.checked) {
+    btn.disabled = false;
+    btn.style.background = '#238636';
+    btn.style.color      = '#ffffff';
+    btn.style.cursor     = 'pointer';
+    lbl.style.borderColor = '#58a6ff';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '#21262d';
+    btn.style.color      = '#484f58';
+    btn.style.cursor     = 'not-allowed';
+    lbl.style.borderColor = '#30363d';
+  }
+}
+function acceptDisclaimer() {
+  if (!document.getElementById('disclaimerCheckbox').checked) return;
+  const overlay = document.getElementById('disclaimerOverlay');
+  overlay.style.opacity    = '0';
+  overlay.style.transition = 'opacity .4s ease';
+  setTimeout(() => {
+    overlay.remove();
+    // Disclaimer accepted — now show licence screen
+    document.getElementById('licenceOverlay').style.display = 'flex';
+    waitForAPI(bootLicenceCheck);
+  }, 420);
+}
+function rejectDisclaimer() {
+  // Grey out and show goodbye message, then quit
+  const overlay = document.getElementById('disclaimerOverlay');
+  overlay.innerHTML = '<div style="color:#8b949e;font-size:16px;text-align:center">' +
+    '<div style="font-size:32px;margin-bottom:16px">👋</div>' +
+    'You did not accept the terms.<br>The application will now close.' +
+    '</div>';
+  setTimeout(() => { if (window.API?.quitApp) window.API.quitApp(); }, 1200);
+}
+</script>
+
+<!-- ═══ INTRO VIDEO OVERLAY ═══ -->
+<div id="introVideoOverlay" style="
+  display:none;
+  position:fixed;inset:0;z-index:99998;
+  background:#000;
+  align-items:center;justify-content:center;
+">
+  <video id="introVideo"
+    src="Storm_Video_For_Email_Automation_Pro.mp4"
+    style="width:100%;height:100%;object-fit:cover;"
+    playsinline
+    preload="auto"
+  ></video>
+
+  <!-- Skip button — hidden for first 3 seconds -->
+  <button id="introSkipBtn"
+    onclick="endIntroVideo()"
+    style="
+      display:none;
+      position:absolute;bottom:32px;right:32px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.25);
+      color:#fff;
+      padding:9px 20px;
+      border-radius:20px;
+      font-size:13px;font-weight:600;
+      cursor:pointer;
+      backdrop-filter:blur(6px);
+      transition:background .15s;
+    "
+    onmouseenter="this.style.background='rgba(255,255,255,.22)'"
+    onmouseleave="this.style.background='rgba(255,255,255,.12)'"
+  >Skip ›</button>
+</div>
+
+<script>
+function showIntroVideo() {
+  const wrapper = document.getElementById('introVideoOverlay');
+  const video   = document.getElementById('introVideo');
+  const skipBtn = document.getElementById('introSkipBtn');
+
+  wrapper.style.display = 'flex';
+
+  // Show skip button after 3 seconds
+  const skipTimer = setTimeout(() => {
+    skipBtn.style.display = 'block';
+  }, 3000);
+
+  // End naturally when video finishes
+  video.addEventListener('ended', endIntroVideo, { once: true });
+
+  // Fallback — if video fails to load, skip straight to app
+  video.addEventListener('error', () => {
+    clearTimeout(skipTimer);
+    endIntroVideo();
+  }, { once: true });
+
+  video.play().catch(() => endIntroVideo());
+}
+
+function endIntroVideo() {
+  const wrapper = document.getElementById('introVideoOverlay');
+  const video   = document.getElementById('introVideo');
+  video.pause();
+  wrapper.style.opacity    = '0';
+  wrapper.style.transition = 'opacity .5s ease';
+  setTimeout(() => {
+    wrapper.remove();
+  }, 520);
+}
+</script>
+
+<!-- ═══ EXIT VIDEO OVERLAY ═══ -->
+<div id="exitVideoOverlay" style="
+  display:none;
+  position:fixed;inset:0;z-index:99997;
+  background:#000;
+  align-items:center;justify-content:center;
+" oncontextmenu="return false">
+  <video id="exitVideo"
+    src="Email-Pro-Vid.mp4"
+    style="width:100%;height:100%;object-fit:cover;pointer-events:none;"
+    playsinline
+    preload="auto"
+    disablePictureInPicture
+    controlsList="nodownload nofullscreen noremoteplayback"
+  ></video>
+  <button id="exitSkipBtn"
+    onclick="endExitVideo()"
+    style="
+      display:none;
+      position:absolute;bottom:32px;right:32px;
+      background:rgba(255,255,255,.13);
+      border:1px solid rgba(255,255,255,.28);
+      color:#fff;padding:10px 22px;
+      border-radius:20px;font-size:13px;font-weight:600;
+      cursor:pointer;backdrop-filter:blur(6px);
+      transition:background .15s;z-index:1;
+    "
+    onmouseenter="this.style.background='rgba(255,255,255,.25)'"
+    onmouseleave="this.style.background='rgba(255,255,255,.13)'"
+  >Exit ›</button>
+</div>
+
+<script>
+function showExitVideo() {
+  const wrapper  = document.getElementById('exitVideoOverlay');
+  const video    = document.getElementById('exitVideo');
+  const skipBtn  = document.getElementById('exitSkipBtn');
+
+  wrapper.style.display  = 'flex';
+  skipBtn.style.display  = 'none';
+
+  // Show exit button after 3 seconds
+  const skipTimer = setTimeout(() => { skipBtn.style.display = 'block'; }, 3000);
+
+  video.addEventListener('ended', () => { clearTimeout(skipTimer); endExitVideo(); }, { once: true });
+  video.addEventListener('error', () => { clearTimeout(skipTimer); endExitVideo(); }, { once: true });
+  video.play().catch(endExitVideo);
+}
+
+function endExitVideo() {
+  const wrapper = document.getElementById('exitVideoOverlay');
+  const video   = document.getElementById('exitVideo');
+  video.pause();
+  wrapper.style.opacity    = '0';
+  wrapper.style.transition = 'opacity .4s ease';
+  setTimeout(() => {
+    if (window.API?.exitVideoDone) window.API.exitVideoDone();
+  }, 420);
+}
+</script>
+
+<div id="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav id="sidebar">
+  <div class="sidebar-top">
+    <div class="app-name">Email Automation</div>
+    <div class="app-sub">v2.1 · Peter</div>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" data-page="tasks">   <span class="nav-icon">⚡</span> Tasks</div>
+    <div class="nav-item" data-page="send">           <span class="nav-icon">📤</span> Send Now</div>
+    <div class="nav-item" data-page="contacts">       <span class="nav-icon">👥</span> Contacts</div>
+    <div class="nav-item" data-page="mykeys">         <span class="nav-icon">🔑</span> My Keys</div>
+    <div class="nav-item" data-page="checksums">      <span class="nav-icon">🔐</span> Checksums</div>
+    <div class="nav-item" data-page="receipts">       <span class="nav-icon">🧾</span> Receipts</div>
+    <div class="nav-item" data-page="transcribe">     <span class="nav-icon">🎬</span> Transcribe</div>
+    <div class="nav-item" data-page="setup">        <span class="nav-icon">🔧</span> Setup</div>
+    <div class="nav-item" data-page="admin" id="adminNavItem" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">
+      <span class="nav-icon">🛡</span> Admin
+    </div>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="guide-btn" onclick="openGuide()" title="Open User Guide">
+      <span>📖</span> <span>User Guide</span>
+      <span class="guide-badge">?</span>
+    </div>
+    <div id="authPill" onclick="handleAuth()">
+      <div class="auth-dot" id="authDot"></div>
+      <span id="authLabel">Not connected</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main">
+
+  <div id="authWarningBanner" class="hidden">
+    ⚠️ Gmail not connected — <a onclick="handleAuth()">Click here to connect Gmail</a> or go to <a onclick="showPage('setup')">Setup</a> for help.
+  </div>
+
+  <!-- ── TASKS ── -->
+  <div class="page active" id="page-tasks">
+    <div class="page-header">
+      <div><div class="page-title">Tasks</div><div class="page-sub">Automated folder-watching email tasks</div></div>
+      <button class="btn btn-primary ml-auto" onclick="openTaskModal()">+ New Task</button>
+    </div>
+    <div class="page-body" id="taskList">
+      <div class="empty"><div class="empty-icon">⚡</div><div class="empty-text">No tasks yet. Create one to get started.</div></div>
+    </div>
+  </div>
+
+  <!-- ── SEND NOW ── -->
+  <div class="page" id="page-send">
+    <div class="page-header">
+      <div><div class="page-title">Send Now</div><div class="page-sub">Compose and send an email immediately</div></div>
+    </div>
+    <div class="page-body">
+      <div class="send-wrap">
+        <div class="form-group">
+          <label class="form-label">Recipient</label>
+          <input type="email" class="form-input" id="sendTo" placeholder="recipient@example.com" oninput="updateEncIndicator()">
+        </div>
+        <div id="encIndicator" class="enc-indicator enc-none">🔓 No encryption (add contact to enable)</div>
+
+        <!-- Password protection — only shown when recipient is Self-Contained mode -->
+        <div class="pw-row" id="pwRow">
+          <div style="display:flex;align-items:center;gap:10px">
+            <label class="toggle">
+              <input type="checkbox" id="pwProtectToggle" onchange="onPwToggle()">
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text)">🔑 Password protect this message</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Recipient must enter the password to decrypt. Share it via iMessage or in person — never by email.</div>
+            </div>
+          </div>
+          <div class="pw-gen-wrap" id="pwGenWrap" style="display:none">
+            <input type="text" class="form-input" id="pwField" placeholder="Password…" readonly style="background:var(--surface);cursor:default">
+            <button class="btn btn-ghost" onclick="genPassword()" title="Generate new password">🎲 New</button>
+            <button class="btn btn-ghost" onclick="copyPw()" title="Copy to clipboard">📋 Copy</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CC <span style="font-size:11px;color:var(--text3);font-weight:400">(optional — comma-separated)</span></label>
+          <input type="text" class="form-input" id="sendCc" placeholder="alice@example.com, bob@example.com" oninput="updateEncIndicator()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">BCC <span style="font-size:11px;color:var(--text3);font-weight:400">(optional — hidden recipients)</span></label>
+          <input type="text" class="form-input" id="sendBcc" placeholder="hidden@example.com" oninput="updateEncIndicator()">
+        </div>
+        <div id="multiEncSummary" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.7"></div>
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" class="form-input" id="sendSubject" placeholder="Weekly Report">
+            <div id="voiceBtn" onclick="toggleVoice('sendSubject')" title="Dictate">🎙</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Body</label>
+          <textarea class="form-input" id="sendBody" rows="5" placeholder="Message body…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Attachments</label>
+          <div class="file-drop-zone" onclick="pickSendFiles()">📁 Click to attach files (max 20 MB per email)</div>
+          <div id="sendFileList"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="doSendNow()">📤 Send Now</button>
+          <button class="btn btn-ghost" onclick="clearSendForm()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONTACTS ── -->
+  <div class="page" id="page-contacts">
+    <div class="page-header">
+      <div><div class="page-title">Contacts</div><div class="page-sub">Manage recipients and their encryption settings</div></div>
+      <button class="btn btn-primary ml-auto" onclick="openContactModal()">+ Add Contact</button>
+    </div>
+    <div class="page-body" id="contactList">
+      <div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No contacts yet. Add one to configure encryption.</div></div>
+    </div>
+  </div>
+
+  <!-- ── MY KEYS ── -->
+  <div class="page" id="page-mykeys">
+    <div class="page-header">
+      <div><div class="page-title">My Keys</div><div class="page-sub">Your identity keypairs for post-quantum encryption</div></div>
+    </div>
+    <div class="page-body" id="myKeysBody">
+      <div class="empty"><div class="empty-icon">🔑</div><div class="empty-text">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ── CHECKSUMS ── -->
+  <div class="page" id="page-checksums">
+    <div class="page-header">
+      <div><div class="page-title">Checksums</div><div class="page-sub">SHA-256 integrity records for all processed files</div></div>
+      <button class="btn btn-ghost btn-sm ml-auto" onclick="loadChecksums()">⟳ Refresh</button>
+    </div>
+    <div class="page-body">
+      <div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+        <div class="table-wrap">
+          <table id="checksumTable">
+            <thead><tr><th>File</th><th>SHA-256</th><th>Size</th><th>Task</th><th>Date</th></tr></thead>
+            <tbody id="checksumBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No checksums yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RECEIPTS ── -->
+  <div class="page" id="page-receipts">
+    <div class="page-header">
+      <div><div class="page-title">Receipts</div><div class="page-sub">Email send receipts with QR codes</div></div>
+      <button class="btn btn-ghost btn-sm ml-auto" onclick="loadReceipts()">⟳ Refresh</button>
+    </div>
+    <div class="page-body" id="receiptList">
+      <div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No receipts yet</div></div>
+    </div>
+  </div>
+
+  <!-- ── TRANSCRIBE ── -->
+  <div class="page" id="page-transcribe">
+    <div class="page-header">
+      <div><div class="page-title">YouTube Transcription</div><div class="page-sub">Download, convert and transcribe YouTube videos using OpenAI Whisper</div></div>
+    </div>
+    <div class="page-body">
+      <div class="yt-wrap">
+
+        <!-- API Key setup -->
+        <div class="yt-card" id="ytApiCard">
+          <div class="yt-info">
+            <div class="section-title">🔑 OpenAI API Key</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input type="password" class="form-input" id="ytApiKey" placeholder="sk-…" style="flex:1">
+              <button class="btn btn-primary" onclick="saveYtKey()">Save</button>
+            </div>
+            <div style="font-size:11px;color:var(--text3)">Used for Whisper transcription. Stored locally, never transmitted elsewhere. Get one at <strong>platform.openai.com/api-keys</strong></div>
+          </div>
+        </div>
+
+        <!-- URL input -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">🎬 YouTube URL</div>
+            <div style="display:flex;gap:8px">
+              <input type="url" class="form-input" id="ytUrl" placeholder="https://www.youtube.com/watch?v=…" style="flex:1" onkeydown="if(event.key==='Enter')fetchYtInfo()">
+              <button class="btn btn-primary" onclick="fetchYtInfo()" id="ytFetchBtn">Fetch</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video info card (hidden until fetched) -->
+        <div class="yt-card" id="ytVideoCard" style="display:none">
+          <img class="yt-thumbnail" id="ytThumb" src="" alt="thumbnail">
+          <div class="yt-info">
+            <div class="yt-title" id="ytTitle"></div>
+            <div class="yt-meta"  id="ytMeta"></div>
+            <div class="yt-desc"  id="ytDesc"></div>
+          </div>
+        </div>
+
+        <!-- Download section -->
+        <div id="ytDownloadSection" style="display:none">
+          <div class="yt-card">
+            <div class="yt-info">
+              <div class="section-title">📥 Download</div>
+
+              <div style="margin-bottom:14px">
+                <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600">VIDEO FORMATS</div>
+                <div class="format-grid" id="videoFormats"></div>
+              </div>
+
+              <div style="margin-bottom:14px">
+                <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600">AUDIO ONLY</div>
+                <div class="format-grid" id="audioFormats"></div>
+              </div>
+
+              <div style="margin-bottom:14px">
+                <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600">CONVERT TO AUDIO FORMAT</div>
+                <div class="export-fmt-row" id="audioConvertBtns">
+                  <button class="export-fmt-btn on" data-afmt="mp3">MP3</button>
+                  <button class="export-fmt-btn" data-afmt="m4a">M4A</button>
+                  <button class="export-fmt-btn" data-afmt="wav">WAV</button>
+                  <button class="export-fmt-btn" data-afmt="opus">OPUS</button>
+                  <button class="export-fmt-btn" data-afmt="flac">FLAC</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Output Folder</label>
+                <div style="display:flex;gap:8px">
+                  <input class="form-input" id="ytOutputDir" readonly placeholder="~/Downloads" style="font-family:var(--font-head);font-size:11px">
+                  <button class="btn btn-ghost btn-sm" onclick="pickYtOutputDir()">📁</button>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary" onclick="doYtDownload()" id="ytDownloadBtn">⬇ Download</button>
+                <button class="btn btn-ghost"   onclick="doYtDownloadAndTranscribe()" id="ytDlTransBtn">🎬 Download + Transcribe</button>
+              </div>
+
+              <div id="ytDlProgress" style="display:none;margin-top:12px">
+                <div class="yt-status" id="ytDlStatus">Preparing…</div>
+                <div class="yt-progress"><div class="yt-progress-bar" id="ytDlBar" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transcription section -->
+          <div class="yt-card">
+            <div class="yt-info">
+              <div class="section-title">📝 Transcription</div>
+
+              <div class="form-group">
+                <label class="form-label">Language (optional — auto-detect if blank)</label>
+                <select class="lang-select" id="ytLang">
+                  <option value="">Auto-detect</option>
+                  <option value="en">English</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="es">Spanish</option>
+                  <option value="it">Italian</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="nl">Dutch</option>
+                  <option value="pl">Polish</option>
+                  <option value="ru">Russian</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ar">Arabic</option>
+                  <option value="hi">Hindi</option>
+                  <option value="tr">Turkish</option>
+                </select>
+              </div>
+
+              <div class="section-title" style="margin-top:14px">Export Formats</div>
+              <div class="export-fmt-row" id="exportFmtBtns">
+                <button class="export-fmt-btn on" data-fmt="txt">TXT</button>
+                <button class="export-fmt-btn on" data-fmt="srt">SRT</button>
+                <button class="export-fmt-btn on" data-fmt="vtt">VTT</button>
+                <button class="export-fmt-btn on" data-fmt="md">Markdown</button>
+                <button class="export-fmt-btn" data-fmt="json">JSON</button>
+              </div>
+
+              <button class="btn btn-primary" onclick="doTranscribeOnly()" id="ytTransBtn" style="margin-top:4px">🎙 Transcribe Audio File</button>
+
+              <div id="ytTransProgress" style="display:none;margin-top:12px">
+                <div class="yt-status" id="ytTransStatus">Transcribing…</div>
+                <div class="yt-progress"><div class="yt-progress-bar" id="ytTransBar" style="width:0%"></div></div>
+              </div>
+
+              <!-- Transcript output -->
+              <div id="ytTranscriptOut" style="display:none;margin-top:16px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <div class="section-title" style="margin:0">Transcript</div>
+                  <button class="btn btn-ghost btn-sm" onclick="copyTranscript()">📋 Copy</button>
+                  <button class="btn btn-primary btn-sm" onclick="saveTranscript()">💾 Save</button>
+                </div>
+                <div class="transcript-box" id="ytTranscriptBox"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-setup">
+    <div class="page-header">
+      <div><div class="page-title">Setup &amp; Diagnostics</div><div class="page-sub">Configure Gmail OAuth and check all dependencies</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="runDiagnostics()">🔄 Re-run Checks</button>
+    </div>
+    <div class="page-body">
+      <div style="max-width:680px">
+
+        <!-- Gmail Auth Card -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">📬 Gmail Connection</div>
+            <div id="setupAuthStatus" style="margin-bottom:14px;font-size:13px;color:var(--text2)">Checking…</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="setupConnectBtn" onclick="handleAuth()">Connect Gmail</button>
+              <button class="btn btn-ghost"   onclick="showPage('setup');runDiagnostics()">Refresh Status</button>
+            </div>
+            <div class="guide-callout info" style="margin-top:14px;font-size:12px">
+              <strong>Need credentials.json?</strong><br>
+              1. Go to <strong>console.cloud.google.com</strong> → APIs &amp; Services → Credentials<br>
+              2. Create OAuth 2.0 Client ID → <strong>Desktop app</strong><br>
+              3. Download JSON → rename to <code>credentials.json</code> → place in the app folder:<br>
+              <code id="credPathDisplay" style="display:block;margin-top:6px;word-break:break-all"></code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dependencies Card -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">📦 Dependencies</div>
+            <div id="setupDepsList" style="font-size:13px;color:var(--text2)">Checking…</div>
+            <div class="guide-callout warn" style="margin-top:14px;font-size:12px">
+              If any packages show ❌, run: <code>npm install</code> in the app folder, then restart.
+            </div>
+          </div>
+        </div>
+
+        <!-- Credentials status -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">📄 credentials.json</div>
+            <div id="setupCredsStatus" style="font-size:13px;color:var(--text2)">Checking…</div>
+          </div>
+        </div>
+
+        <!-- ffmpeg -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">🎞 ffmpeg (for audio conversion)</div>
+            <div id="setupFfmpegStatus" style="font-size:13px;color:var(--text2)">Checking…</div>
+            <div class="guide-callout info" style="margin-top:10px;font-size:12px">
+              Install: <code>brew install ffmpeg</code> (Mac) &nbsp;|&nbsp; <code>winget install ffmpeg</code> (Windows)
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN PAGE ═══ -->
+  <div class="page" id="page-admin">
+    <div class="page-header">
+      <div>
+        <div class="page-title">🛡 Admin</div>
+        <div class="page-sub">Developer tools — Spike Wright</div>
+      </div>
+    </div>
+
+    <!-- Admin PIN lock -->
+    <div id="adminLockScreen" class="page-body" style="display:flex;align-items:center;justify-content:center">
+      <div style="max-width:340px;width:100%;text-align:center">
+        <div style="font-size:40px;margin-bottom:16px">🔒</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Admin Area</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Enter your admin PIN to continue</div>
+        <input id="adminPinInput" type="password" maxlength="12"
+          placeholder="PIN"
+          style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+                 color:var(--text);font-size:18px;padding:12px;text-align:center;letter-spacing:.3em;
+                 outline:none;box-sizing:border-box;margin-bottom:10px"
+          onkeydown="if(event.key==='Enter')checkAdminPin()"
+        >
+        <div id="adminPinError" style="display:none;font-size:12px;color:var(--red);margin-bottom:10px"></div>
+        <button onclick="checkAdminPin()" style="
+          width:100%;padding:12px;border:none;border-radius:8px;
+          background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">
+          Unlock
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin content (shown after PIN) -->
+    <div id="adminContent" class="page-body" style="display:none">
+      <div style="max-width:700px">
+
+        <!-- Generate standard key -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">🔑 Generate Standard Licence Key</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Tied to a specific email address</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div>
+                <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Customer Name</label>
+                <input id="adminKeyName" type="text" placeholder="Jane Smith" class="form-input">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Email Address</label>
+                <input id="adminKeyEmail" type="email" placeholder="jane@example.com" class="form-input">
+              </div>
+            </div>
+            <div style="margin-bottom:14px">
+              <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Expiry</label>
+              <select id="adminKeyExpiry" class="form-input" style="width:auto">
+                <option value="1y">1 Year</option>
+                <option value="2y">2 Years</option>
+                <option value="lifetime">Lifetime</option>
+              </select>
+            </div>
+            <button onclick="adminGenStandardKey()" class="btn btn-primary">Generate Key</button>
+            <div id="adminStdKeyResult" style="display:none;margin-top:14px;padding:12px 16px;
+              background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:6px">LICENCE KEY — copy and send to customer</div>
+              <div id="adminStdKeyValue" style="font-family:monospace;font-size:15px;color:var(--accent);letter-spacing:.08em;margin-bottom:8px"></div>
+              <button onclick="copyAdminKey('adminStdKeyValue')" class="btn btn-ghost btn-sm">📋 Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate walk-up keys -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div class="section-title">🚶 Generate Walk-Up Keys</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Not tied to email — for in-person sales. Customer uses any email to activate.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+              <div>
+                <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Quantity</label>
+                <input id="adminWalkupCount" type="number" min="1" max="50" value="5" class="form-input">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Expiry</label>
+                <select id="adminWalkupExpiry" class="form-input">
+                  <option value="1y">1 Year</option>
+                  <option value="2y">2 Years</option>
+                  <option value="lifetime">Lifetime</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Note</label>
+                <input id="adminWalkupNote" type="text" placeholder="e.g. Market Feb 2026" class="form-input">
+              </div>
+            </div>
+            <button onclick="adminGenWalkupKeys()" class="btn btn-primary">Generate Keys</button>
+            <div id="adminWalkupResult" style="display:none;margin-top:14px;padding:12px 16px;
+              background:var(--surface2);border:1px solid var(--border);border-radius:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:11px;color:var(--text3)">WALK-UP KEYS — print and hand to customers</div>
+                <button onclick="copyAdminKey('adminWalkupKeyList')" class="btn btn-ghost btn-sm">📋 Copy All</button>
+              </div>
+              <pre id="adminWalkupKeyList" style="font-family:monospace;font-size:13px;color:var(--accent);
+                margin:0;white-space:pre-wrap;letter-spacing:.04em;line-height:1.8"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Issued key log -->
+        <div class="yt-card">
+          <div class="yt-info">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div class="section-title" style="margin:0">📋 Issued Key Log</div>
+              <button onclick="loadIssuedLog()" class="btn btn-ghost btn-sm">🔄 Refresh</button>
+            </div>
+            <div id="adminKeyLog" style="font-size:12px;color:var(--text3);
+              max-height:280px;overflow-y:auto;font-family:monospace;
+              background:var(--surface2);border:1px solid var(--border);
+              border-radius:8px;padding:12px;line-height:1.9">
+              Click Refresh to load log…
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="yt-card" style="border-color:rgba(248,81,73,.3)">
+          <div class="yt-info">
+            <div class="section-title" style="color:var(--red)">⚠️ Danger Zone</div>
+            <div style="font-size:13px;color:var(--text3);margin-bottom:14px">
+              Reset stored licence — useful for testing. The app will ask for a key on next launch.
+            </div>
+            <button onclick="adminClearLicence()" class="btn" style="background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.3)">
+              🗑 Reset Stored Licence
+            </button>
+            <div id="adminClearMsg" style="display:none;margin-top:8px;font-size:12px;color:var(--green)"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div> <!-- end #main -->
+</div> <!-- end #app -->
+
+<!-- ═══ USER GUIDE MODAL ═══ -->
+<div class="guide-modal" id="guideModal">
+  <button class="guide-close-btn" onclick="closeGuide()">✕ Close</button>
+  <div class="guide-doc">
+
+    <div class="guide-doc-header">
+      <div class="guide-version">v2.2</div>
+      <h1>📬 Email Automation Pro</h1>
+      <p>Complete user guide — Tasks · Encryption · YouTube Transcription · Key Management</p>
+    </div>
+
+    <nav class="guide-toc">
+      <a href="#g-overview">Overview</a>
+      <a href="#g-setup">Setup</a>
+      <a href="#g-tasks">Tasks</a>
+      <a href="#g-sendnow">Send Now</a>
+      <a href="#g-encryption">Encryption</a>
+      <a href="#g-contacts">Contacts</a>
+      <a href="#g-keys">My Keys</a>
+      <a href="#g-transcribe">YouTube</a>
+      <a href="#g-checksums">Checksums</a>
+      <a href="#g-receipts">Receipts</a>
+      <a href="#g-shortcuts">Shortcuts</a>
+      <a href="#g-faq">FAQ</a>
+    </nav>
+
+    <div class="guide-body">
+
+      <!-- ── OVERVIEW ── -->
+      <h2 id="g-overview">🌐 Overview</h2>
+      <p>Email Automation Pro is a secure, local-first desktop application that automates the sending of files from watched folders to email recipients — with optional hybrid post-quantum encryption, SHA-256 file integrity tracking, QR receipts, and YouTube transcription.</p>
+      <p>All data stays on your machine. Gmail OAuth tokens, encryption keys, transcripts, and database records are stored in your system's user-data directory and never leave unless you explicitly send an email.</p>
+      <div class="guide-callout info">
+        <strong>ℹ️ Architecture</strong> — The app runs as an Electron desktop process. A 30-second poller watches each task's folder pairs and fires emails at the scheduled time. Whisper transcription calls the OpenAI API, which is the only outbound network connection aside from Gmail.
+      </div>
+
+      <!-- ── SETUP ── -->
+      <h2 id="g-setup">⚙️ First-Time Setup</h2>
+      <h3>1. Install dependencies</h3>
+      <pre>cd email-pro
+npm install
+npm start</pre>
+      <div class="guide-callout warn">
+        <strong>⚠️ Node 18+</strong> required. If you see native module errors, check your Node version with <code>node --version</code>.
+      </div>
+
+      <h3>2. Connect Gmail</h3>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-body">Place your <code>credentials.json</code> from Google Cloud Console in the project root. The app needs an OAuth 2.0 Desktop App credential with the <code>gmail.send</code> scope.</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-body">Click <strong>Connect Gmail</strong> in the bottom-left sidebar. A browser window opens for Google OAuth.</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-body">Approve access. The token is saved locally — you won't need to re-authenticate unless you sign out.</div></div>
+
+      <h3>3. Generate your encryption keys (optional)</h3>
+      <p>Navigate to <strong>My Keys</strong> → enter your name and email → choose your KEM strength (ML-KEM-1024 is the highest security, recommended) → click <strong>Generate My Keys</strong>. This creates a hybrid post-quantum keypair (ML-KEM + X25519) and an OpenPGP keypair, stored locally.</p>
+
+      <!-- ── TASKS ── -->
+      <h2 id="g-tasks">⚡ Tasks</h2>
+      <p>Tasks are the core of the automation. Each task defines <em>who</em> to send to, <em>when</em> to send, and <em>which folders</em> to watch.</p>
+
+      <h3>Creating a Task</h3>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-body">Click <strong>+ New Task</strong> → give it a name and recipient email address.</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-body">Set the schedule time (HH:MM) and tick the days of the week. For a 09:00 deadline, set <strong>08:45</strong> to be safe.</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-body">Add one or more <strong>Folder Pairs</strong> — each pair has a <em>source</em> folder (watched for new files) and a <em>destination</em> folder (where files are moved after sending).</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-body">Save. The task card appears with a toggle switch. Enable it to start watching.</div></div>
+
+      <div class="guide-callout tip">
+        <strong>✅ Tip:</strong> Files are only sent if they exist in the source folder at the scheduled time. Empty folders are silently skipped — no error, no email.
+      </div>
+
+      <h3>Schedule Format</h3>
+      <p>Internally stored as <code>HH:MM:DOW1,DOW2</code> — e.g. <code>08:45:MON,WED,FRI</code>. The poller fires within the first 30 seconds of the target minute, then waits until the next interval.</p>
+
+      <h3>20 MB Batching</h3>
+      <p>If the total size of files in a folder pair exceeds 20 MB, the app automatically splits them across multiple emails labelled <strong>(Part 1/N)</strong>. Each batch gets its own checksum records and receipt.</p>
+
+      <!-- ── SEND NOW ── -->
+      <h2 id="g-sendnow">📤 Send Now</h2>
+      <p>Manually compose and send an email immediately, bypassing the scheduler. Useful for ad-hoc sends or testing your encryption setup.</p>
+      <ul>
+        <li>Type the recipient email — the <strong>encryption indicator</strong> updates in real time based on that contact's settings.</li>
+        <li>Attach files via the file picker. Multiple files are supported; batching applies automatically.</li>
+        <li>Voice dictation (🎙) uses your browser's Web Speech API for subject line input.</li>
+      </ul>
+
+      <!-- ── ENCRYPTION ── -->
+      <h2 id="g-encryption">🔒 Encryption</h2>
+      <p>Every email is encrypted according to the recipient's contact profile. Four modes are available:</p>
+
+      <div class="guide-enc-grid">
+        <div class="guide-enc-card guide-enc-self">
+          <h4>🔒 Self-Contained <em>(default)</em></h4>
+          <p>Encrypts content and bundles a one-time private key into a single <code>.html</code> file. Recipient opens it in any browser — no software needed. ⚠️ Key travels with ciphertext; safe for low-sensitivity sends or first contact.</p>
+        </div>
+        <div class="guide-enc-card guide-enc-reg">
+          <h4>🗝 Key Registry <em>(recommended)</em></h4>
+          <p>Uses <strong>XWing (ML-KEM-768 + X25519)</strong> — IETF hybrid post-quantum KEM. Only the holder of the recipient's private key can decrypt. Requires a one-time key exchange. Quantum-resistant.</p>
+        </div>
+        <div class="guide-enc-card guide-enc-pgp">
+          <h4>🛡 OpenPGP</h4>
+          <p>Standard armored PGP encryption. Compatible with Thunderbird, GPG, and all OpenPGP clients. Use when recipients already have a PGP key infrastructure.</p>
+        </div>
+        <div class="guide-enc-card guide-enc-none">
+          <h4>🔓 None</h4>
+          <p>Plain-text email. No encryption. Use only for non-sensitive content or when the recipient cannot handle encrypted messages.</p>
+        </div>
+      </div>
+
+      <h3>Key Exchange (Registry mode)</h3>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-body">Go to <strong>My Keys</strong> → click <strong>Export My Public Keys</strong>. Copy the JSON.</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-body">Send the JSON to your contact via a secure channel (Signal, in person, etc.).</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-body">They add you as a contact, paste your <code>mlkem_pub</code> (and optionally <code>x25519_pub</code>), and set mode to Key Registry.</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-body">They repeat the process in reverse. You paste their keys in their Contact entry here.</div></div>
+      <div class="guide-step"><div class="guide-step-num">5</div><div class="guide-step-body">Done — all emails between you are now end-to-end encrypted with post-quantum security. 🔒</div></div>
+
+      <div class="guide-callout sec">
+        <strong>🛡 Algorithm:</strong> XWing uses ML-KEM-768 (NIST FIPS 203) combined with X25519 ECDH via the CG Framework (IETF draft-connolly-cfrg-xwing-kem). The combined shared secret feeds into AES-256-GCM for symmetric encryption. Even if quantum computers break X25519, ML-KEM-768 ensures the message remains secure.
+      </div>
+
+      <!-- ── CONTACTS ── -->
+      <h2 id="g-contacts">👥 Contacts</h2>
+      <p>Every recipient should have a Contact entry. Without one, emails are sent with Self-Contained encryption by default.</p>
+      <p>In the Contact editor:</p>
+      <ul>
+        <li><strong>Encryption Mode</strong> — choose from the four modes described above.</li>
+        <li><strong>XWing Public Key</strong> — paste their exported <code>mlkem_pub</code> (for Key Registry mode).</li>
+        <li><strong>X25519 Public Key</strong> — fallback if XWing is unavailable on either side.</li>
+        <li><strong>PGP Public Key</strong> — their armored PGP public key (for OpenPGP mode).</li>
+        <li><strong>Notes</strong> — any personal notes (e.g. "Teacher at Westfield Academy").</li>
+      </ul>
+
+      <!-- ── MY KEYS ── -->
+      <h2 id="g-keys">🔑 My Keys</h2>
+      <p>Your identity keypairs are generated once and stored in your system userData directory. They are never transmitted unless you explicitly export them.</p>
+      <p>Three keypairs are generated:</p>
+      <ul>
+        <li><strong>XWing (ML-KEM-768 + X25519)</strong> — primary hybrid KEM keypair. Used for Key Registry encryption.</li>
+        <li><strong>X25519</strong> — fallback ECDH keypair. Used when XWing is unavailable.</li>
+        <li><strong>OpenPGP (Curve25519)</strong> — used for OpenPGP mode; compatible with any OpenPGP client.</li>
+      </ul>
+      <div class="guide-callout warn">
+        <strong>⚠️ Regenerating keys</strong> will break existing Key Registry relationships. Contacts who stored your old public key will no longer be able to encrypt to you until you re-exchange.
+      </div>
+
+      <!-- ── YOUTUBE ── -->
+      <h2 id="g-transcribe">🎬 YouTube Transcription</h2>
+      <p>Download YouTube videos or extract audio, then transcribe with OpenAI Whisper. Supports all export formats needed for captions, notes, and subtitles.</p>
+
+      <h3>Setup</h3>
+      <p>Enter your <strong>OpenAI API key</strong> (starting with <code>sk-</code>) in the API Key box at the top of the Transcribe page. It's saved locally.</p>
+
+      <h3>Workflow</h3>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-body">Paste a YouTube URL and click <strong>Fetch</strong>. The video thumbnail, title, and available formats load.</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-body">Choose a video format (for full download) or an audio-only format. Then select the audio conversion format (MP3, M4A, WAV, OPUS, FLAC).</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-body">Set an output folder. Click <strong>Download</strong> for files only, or <strong>Download + Transcribe</strong> to do both in one step.</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-body">For transcription, optionally set a language (or leave blank for auto-detect). Select export formats and click <strong>Save</strong>.</div></div>
+
+      <h3>Export Formats</h3>
+      <table class="guide-shortcut-table">
+        <thead><tr><th>Format</th><th>Use case</th></tr></thead>
+        <tbody>
+          <tr><td><code>.txt</code></td><td>Plain text — the full transcript, no timestamps</td></tr>
+          <tr><td><code>.srt</code></td><td>SubRip subtitles — standard subtitle format for video players</td></tr>
+          <tr><td><code>.vtt</code></td><td>WebVTT — HTML5 video captions, YouTube compatible</td></tr>
+          <tr><td><code>.md</code></td><td>Markdown — formatted with metadata, full text, and timestamped segments</td></tr>
+          <tr><td><code>.json</code></td><td>Full Whisper API response — includes confidence scores and word-level data</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Audio Formats</h3>
+      <table class="guide-shortcut-table">
+        <thead><tr><th>Format</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>MP3</td><td>192kbps — universal compatibility</td></tr>
+          <tr><td>M4A</td><td>AAC 192kbps — Apple ecosystem, smaller than MP3</td></tr>
+          <tr><td>WAV</td><td>PCM 16-bit — uncompressed, best for further processing</td></tr>
+          <tr><td>OPUS</td><td>128kbps — best quality/size ratio, open format</td></tr>
+          <tr><td>FLAC</td><td>Lossless compression — archival quality</td></tr>
+        </tbody>
+      </table>
+
+      <div class="guide-callout info">
+        <strong>ℹ️ ffmpeg required</strong> for audio conversion. Install with: <code>brew install ffmpeg</code> (Mac) or <code>winget install ffmpeg</code> (Windows). Without it, you can still download the original format but cannot convert.
+      </div>
+
+      <!-- ── CHECKSUMS ── -->
+      <h2 id="g-checksums">🔐 Checksums</h2>
+      <p>Every file processed by the app (whether from a task or a manual send) gets a SHA-256 checksum recorded before sending. This creates a tamper-evident audit trail.</p>
+      <p>You can verify integrity later: if the checksum of a received file matches the recorded hash, the file arrived unmodified.</p>
+
+      <!-- ── RECEIPTS ── -->
+      <h2 id="g-receipts">🧾 Receipts</h2>
+      <p>A receipt is generated for every email sent. It records: recipient, subject, file list, timestamp, and the task that triggered it.</p>
+      <p>Click <strong>📱 QR</strong> on any receipt to view a QR code encoding the receipt metadata — useful for verifying delivery on a mobile device.</p>
+
+      <!-- ── SHORTCUTS ── -->
+      <h2 id="g-shortcuts">⌨️ Keyboard & Tips</h2>
+      <table class="guide-shortcut-table">
+        <thead><tr><th>Action</th><th>How</th></tr></thead>
+        <tbody>
+          <tr><td>Voice dictate subject</td><td>Click 🎙 next to the subject field</td></tr>
+          <tr><td>Dismiss modal</td><td>Click outside the modal or press <kbd>Esc</kbd></td></tr>
+          <tr><td>Fetch YouTube info</td><td><kbd>Enter</kbd> in the URL field</td></tr>
+          <tr><td>Copy public keys</td><td>My Keys → Export → Copy button</td></tr>
+          <tr><td>Reload tasks list</td><td>Switch pages and back</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ── FAQ ── -->
+      <h2 id="g-faq">❓ FAQ</h2>
+
+      <h3>Why does the app ask for Gmail OAuth instead of my password?</h3>
+      <p>OAuth is more secure — no password is ever stored. The access token is stored locally in <code>~/.config/email-automation-pro/</code> and can be revoked at any time from your Google account settings.</p>
+
+      <h3>Where are my keys stored?</h3>
+      <p>In <code>my-keys.json</code> inside the Electron userData directory. On macOS: <code>~/Library/Application Support/email-automation-pro/</code>. On Windows: <code>%APPDATA%\email-automation-pro\</code>.</p>
+
+      <h3>Can recipients read Self-Contained encrypted messages without installing anything?</h3>
+      <p>Yes. They just need a modern browser. The HTML file uses the <strong>Web Crypto API</strong> (built into all browsers) to decrypt — no extensions, no downloads, no accounts.</p>
+
+      <h3>Does transcription work offline?</h3>
+      <p>No — Whisper transcription uses the OpenAI API. For offline transcription, you can use <code>whisper.cpp</code> separately and transcribe the downloaded audio file manually.</p>
+
+      <h3>What happens if a task fires and the folder is empty?</h3>
+      <p>Nothing — it's silently skipped. No email is sent, no error logged.</p>
+
+      <h3>Can I send to multiple recipients?</h3>
+      <p>Yes — use the <strong>CC</strong> and <strong>BCC</strong> fields in Send Now. Each recipient is encrypted individually using their own keys from Contacts. If recipients use different encryption modes, they are automatically grouped and receive separate appropriately-encrypted emails. Tasks remain single-recipient for scheduling simplicity.</p>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── STATUS BAR ── -->
+<div id="statusBar">
+  <div class="status-dot"></div>
+  <span id="statusText">Poller running · 30s interval</span>
+  <span style="margin-left:auto" id="lastTick">—</span>
+</div>
+
+<!-- ═══ TASK MODAL ═══ -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-title" id="taskModalTitle">New Task</div>
+    <input type="hidden" id="editTaskId">
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Task Name</label>
+        <input type="text" class="form-input" id="taskName" placeholder="Weekly Report">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Recipient Email</label>
+        <input type="email" class="form-input" id="taskRecipient" placeholder="teacher@school.ac.uk">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Send Schedule</label>
+      <div class="sched-row" style="margin-bottom:10px">
+        <input type="time" class="form-input" id="schedTime" style="width:130px" value="08:45">
+        <span style="font-size:12px;color:var(--text2)">on</span>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label class="day-check"><input type="checkbox" class="sched-day" value="MON" checked> Mon</label>
+          <label class="day-check"><input type="checkbox" class="sched-day" value="TUE"> Tue</label>
+          <label class="day-check"><input type="checkbox" class="sched-day" value="WED"> Wed</label>
+          <label class="day-check"><input type="checkbox" class="sched-day" value="THU"> Thu</label>
+          <label class="day-check"><input type="checkbox" class="sched-day" value="FRI" checked> Fri</label>
+          <label class="day-check"><input type="checkbox" class="sched-day" value="SAT"> Sat</label>
+          <label class="day-check"><input type="checkbox" class="sched-day" value="SUN"> Sun</label>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">Tip: for a 09:00 deadline, set 08:45</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Folder Pairs</label>
+      <div id="pairList"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addPair()" style="margin-top:8px">+ Add Folder Pair</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+      <button class="btn btn-ghost" onclick="closeTaskModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTACT MODAL ═══ -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <div class="modal-title" id="contactModalTitle">Add Contact</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" id="cName" placeholder="Alice Smith">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="cEmail" placeholder="alice@example.com">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Encryption Mode</label>
+      <div class="enc-mode-group" id="encModeGroup">
+        <button class="enc-mode-btn selected" data-mode="selfcontained" onclick="selectEncMode('selfcontained')">🔒 Self-Contained</button>
+        <button class="enc-mode-btn" data-mode="registry" onclick="selectEncMode('registry')">🗝 Key Registry</button>
+        <button class="enc-mode-btn" data-mode="openpgp" onclick="selectEncMode('openpgp')">🛡 OpenPGP</button>
+        <button class="enc-mode-btn" data-mode="none" onclick="selectEncMode('none')">🔓 None</button>
+      </div>
+      <div class="enc-mode-desc" id="encModeDesc">
+        <strong>Self-Contained</strong> — A single HTML file contains both the encrypted message and the one-time decryption key. Recipients open it in any browser — no software needed. Best for first contact or low-sensitivity sends. Note: if the email is intercepted, the key travels with it.
+      </div>
+    </div>
+
+    <div id="keyFields">
+      <!-- X25519 / Kyber shown for registry mode -->
+      <div id="registryFields" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Their KEM Variant</label>
+          <select class="form-input" id="cMlkemVariant" style="cursor:pointer">
+            <option value="1024">ML-KEM-1024 (highest security, recommended)</option>
+            <option value="768">ML-KEM-768 (high security, backward compatible)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Symmetric Cipher</label>
+          <select class="form-input" id="cCipher" style="cursor:pointer">
+            <option value="aes-256-gcm">AES-256-GCM (recommended, hardware-accelerated)</option>
+            <option value="chacha20-poly1305">ChaCha20-Poly1305 (faster in software, used by Signal &amp; WireGuard)</option>
+          </select>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">
+            Both are equally secure. AES-256-GCM is faster when the CPU has AES hardware acceleration (most modern computers). ChaCha20-Poly1305 is faster on devices without it. Either decrypts fine in Email Automation Pro.
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Their Post-Quantum Public Key (base64) — <span style="color:var(--green)">ML-KEM</span></label>
+          <textarea class="form-input" id="cMlkemPub" rows="2" placeholder="Paste their exported mlkem_pub value…"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Their X25519 Public Key (base64) <span style="color:var(--text3)">(fallback if XWing unavailable)</span></label>
+          <textarea class="form-input" id="cX25519Pub" rows="2" placeholder="Paste their exported x25519_pub value…"></textarea>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">
+          Ask them to go to <strong>My Keys → Export My Public Keys</strong> and send you the JSON. Paste <code>mlkem_pub</code> and optionally <code>x25519_pub</code> above.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Symmetric Cipher</label>
+          <select class="form-input" id="cCipher" style="cursor:pointer">
+            <option value="aes-256-gcm">AES-256-GCM (default — universally supported)</option>
+            <option value="chacha20-poly1305">ChaCha20-Poly1305 (faster on mobile &amp; ARM — used by Signal &amp; WireGuard)</option>
+          </select>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">Both are equally secure. Only change if the recipient prefers ChaCha20. Self-Contained mode always uses AES-256-GCM (browser requirement).</div>
+        </div>
+      </div>
+      <!-- PGP shown for openpgp mode -->
+      <div id="pgpFields" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Their OpenPGP Public Key (armored)</label>
+          <textarea class="form-input pgp-textarea" id="cPgpPub" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#10;...&#10;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">OpenPGP Cipher</label>
+          <select class="form-input" id="cPgpCipher" style="cursor:pointer" onchange="updatePgpCompatHint()">
+            <option value="aes-256-gcm">AES-256-GCM with AEAD (default — OpenPGP v6, RFC 9580)</option>
+            <option value="chacha20-poly1305">ChaCha20-Poly1305 with AEAD (RFC 9580 — Signal-style, faster on ARM)</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-start;gap:10px">
+          <label class="toggle" style="margin-top:2px">
+            <input type="checkbox" id="cPgpCompat" onchange="updatePgpCompatHint()">
+            <span class="toggle-slider"></span>
+          </label>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">Legacy compatibility mode (v4 key format)</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">Enable if the recipient uses GPG &lt; 2.4.7 or Thunderbird &lt; 128. Uses CFB mode instead of AEAD — disables ChaCha20 and AEAD protection. Only enable if they report they cannot decrypt your messages.</div>
+          </div>
+        </div>
+        <div id="pgpCompatHint" style="display:none;padding:8px 12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;font-size:11px;color:var(--amber);margin-bottom:12px"></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">
+          Ask them to export their public key from Thunderbird, GPG Keychain, or click <strong>My Keys → Export My Public Keys</strong> and copy the pgp_pub field.
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">iMessage Handle <span style="font-size:11px;color:var(--text3);font-weight:400">(optional — for auto-sending passwords)</span></label>
+      <input type="text" class="form-input" id="cImessageHandle" placeholder="+447911123456 or apple@icloud.com">
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Phone number or Apple ID email. If blank, the contact's email address is used as a fallback. Only needed for password-protected Self-Contained messages.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input type="text" class="form-input" id="cNotes" placeholder="e.g. Teacher at Westfield Academy">
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="saveContact()">Save Contact</button>
+      <button class="btn btn-ghost" onclick="closeContactModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PASSWORD DELIVERY MODAL ═══ -->
+<div class="pw-modal-overlay" id="pwDeliveryModal" style="display:none" onclick="if(event.target===this)closePwModal()">
+  <div class="pw-modal-box">
+    <div class="pw-modal-title" id="pwModalTitle">✅ Password Sent via iMessage</div>
+    <div class="pw-modal-sub" id="pwModalSub"></div>
+    <!-- QR + password shown only when iMessage failed -->
+    <div id="pwFallbackSection" style="display:none">
+      <div class="pw-qr"><img id="pwQrImg" src="" alt="Password QR code"></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Recipient can scan this QR code instead of typing</div>
+      <div class="pw-display" id="pwDisplayText"></div>
+      <div class="pw-actions">
+        <button class="btn btn-primary" onclick="sendViaMessages()">💬 Open iMessage Manually</button>
+        <button class="btn btn-ghost" onclick="copyPwFromModal()">📋 Copy Password</button>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-ghost" style="color:var(--text3);font-size:12px;width:100%" onclick="closePwModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QR MODAL ═══ -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal" style="width:340px;text-align:center">
+    <div class="modal-title">📱 Receipt QR Code</div>
+    <div id="qrDetails" style="font-size:12px;color:var(--text2);margin-bottom:8px"></div>
+    <img id="qrImg" style="max-width:280px;border-radius:8px;margin:12px 0" alt="QR Code">
+    <div style="margin-top:12px"><button class="btn btn-ghost" onclick="closeQrModal()">Close</button></div>
+  </div>
+</div>
+
+<!-- ═══ NOTIFICATION ═══ -->
+<div class="notif" id="notif"></div>
+
+
+<script>
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+const S = {
+  authed: false, tasks: [], contacts: [], myKeys: null,
+  sendFiles: [], editTaskId: null, pairs: [],
+  selectedEncMode: 'selfcontained', editContactEmail: null,
+  lastPassword: null, lastRecipient: null
+};
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+async function init() {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('page-' + el.dataset.page).classList.add('active');
+      if (el.dataset.page === 'checksums') loadChecksums();
+      if (el.dataset.page === 'receipts')  loadReceipts();
+      if (el.dataset.page === 'contacts')  loadContacts();
+      if (el.dataset.page === 'mykeys')    loadMyKeys();
+      if (el.dataset.page === 'setup')     runDiagnostics();
+      if (el.dataset.page === 'transcribe') initTranscribePage();
+      if (el.dataset.page === 'admin')      initAdminPage();
+    });
+  });
+  const { authed } = await window.API.getAuthStatus();
+  setAuth(authed);
+  await loadTasks();
+  await loadContacts();
+  window.API.on('auth-changed', ({ authed }) => setAuth(authed));
+  window.API.on('email-sent',   ({ task, files }) => notify(`✅ Sent ${files} file(s) from "${task}"`, 'ok'));
+  window.API.on('poller-tick',  ({ at }) => { document.getElementById('lastTick').textContent = 'Last tick: ' + new Date(at).toLocaleTimeString('en-GB'); });
+  window.API.on('task-status',     ({ error }) => notify(`❌ Task error: ${error}`, 'err'));
+  window.API.on('play-exit-video', () => showExitVideo());
+}
+
+/* ════════════════════════════════
+   AUTH
+════════════════════════════════ */
+function setAuth(authed) {
+  S.authed = authed;
+  document.getElementById('authDot').className = 'auth-dot' + (authed ? ' ok' : '');
+  document.getElementById('authLabel').textContent = authed ? 'Gmail connected' : 'Connect Gmail';
+  const banner = document.getElementById('authWarningBanner');
+  if (banner) {
+    if (authed) banner.classList.remove('visible');
+    else        banner.classList.add('visible');
+  }
+}
+async function handleAuth() {
+  if (S.authed) {
+    if (!confirm('Sign out of Gmail?')) return;
+    await window.API.signOut(); setAuth(false);
+  } else {
+    notify('Opening browser for Gmail auth…', 'ok');
+    const { ok, error } = await window.API.authorize();
+    if (!ok) notify('Auth failed: ' + error, 'err');
+    else { setAuth(true); notify('✅ Gmail connected!', 'ok'); }
+  }
+}
+
+/* ════════════════════════════════
+   TASKS
+════════════════════════════════ */
+async function loadTasks() {
+  S.tasks = await window.API.getTasks(); renderTasks();
+}
+function renderTasks() {
+  const el = document.getElementById('taskList');
+  if (!S.tasks.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">⚡</div><div class="empty-text">No tasks yet. Create one to get started.</div></div>'; return; }
+  el.innerHTML = S.tasks.map(taskCard).join('');
+}
+function taskCard(t) {
+  const contact  = S.contacts.find(c => c.email === t.recipient);
+  const encMode  = contact?.enc_mode || 'selfcontained';
+  const encLabel = { none:'🔓 No encryption', selfcontained:'🔒 Self-Contained', registry:'🗝 Key Registry', openpgp:'🛡 OpenPGP' }[encMode] || encMode;
+  const encClass = { none:'badge-red', selfcontained:'badge-amber', registry:'badge-green', openpgp:'badge-purple' }[encMode] || 'badge-blue';
+  const time = t.schedule?.split(':').slice(0,2).join(':') || '—';
+  const days = t.schedule?.split(':')[2] || 'Daily';
+  const pairs = (t.folderPairs||[]).map(p => `
+    <div class="pair-row">
+      <span class="pair-name">${esc(p.name)}</span>
+      <span class="pair-arrow">→</span>
+      <span class="pair-path" title="${esc(p.source)}">${shortPath(p.source)}</span>
+      <span class="pair-arrow" style="color:var(--text3)">▸</span>
+      <span class="pair-path" title="${esc(p.dest)}">${shortPath(p.dest)}</span>
+    </div>`).join('');
+  return `
+  <div class="task-card" id="task-${t.id}">
+    <div class="task-header">
+      <label class="toggle"><input type="checkbox" ${t.enabled?'checked':''} onchange="toggleTask('${t.id}')"><span class="toggle-slider"></span></label>
+      <div>
+        <div class="task-name">${esc(t.name)}</div>
+        <div class="task-meta">📧 ${esc(t.recipient)} · ⏰ ${time} · 📅 ${days}</div>
+      </div>
+      <span class="badge ${encClass} ml-auto">${encLabel}</span>
+    </div>
+    ${pairs ? `<div class="task-pairs">${pairs}</div>` : ''}
+    <div class="task-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openTaskModal('${t.id}')">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">🗑 Delete</button>
+    </div>
+  </div>`;
+}
+async function toggleTask(id) { S.tasks = await window.API.toggleTask(id); renderTasks(); }
+async function deleteTask(id)  {
+  if (!confirm('Delete this task?')) return;
+  S.tasks = await window.API.deleteTask(id); renderTasks();
+}
+
+/* ── Task Modal ── */
+function openTaskModal(id = null) {
+  S.editTaskId = id; S.pairs = [];
+  document.getElementById('taskModalTitle').textContent = id ? 'Edit Task' : 'New Task';
+  document.getElementById('editTaskId').value = id || '';
+  if (id) {
+    const t = S.tasks.find(t => t.id === id);
+    if (t) {
+      document.getElementById('taskName').value = t.name;
+      document.getElementById('taskRecipient').value = t.recipient;
+      const sp = (t.schedule||'08:45').split(':');
+      document.getElementById('schedTime').value = sp[0] + ':' + sp[1];
+      const days = sp[2] ? sp[2].split(',') : [];
+      document.querySelectorAll('.sched-day').forEach(cb => { cb.checked = days.includes(cb.value) || !days.length; });
+      S.pairs = JSON.parse(JSON.stringify(t.folderPairs||[]));
+    }
+  } else {
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskRecipient').value = '';
+    document.getElementById('schedTime').value = '08:45';
+    document.querySelectorAll('.sched-day').forEach(cb => cb.checked = ['MON','FRI'].includes(cb.value));
+    S.pairs = [];
+  }
+  renderPairs();
+  document.getElementById('taskModal').classList.add('open');
+}
+function closeTaskModal() { document.getElementById('taskModal').classList.remove('open'); }
+function renderPairs() {
+  const el = document.getElementById('pairList');
+  if (!S.pairs.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px">No folder pairs yet</div>'; return; }
+  el.innerHTML = S.pairs.map((p,i) => `
+    <div class="pair-editor">
+      <div class="pair-editor-header">
+        <input type="text" class="form-input" style="flex:1" value="${esc(p.name)}" placeholder="Pair name" oninput="S.pairs[${i}].name=this.value">
+        <button class="btn btn-danger btn-sm btn-icon" onclick="removePair(${i})">✕</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="form-label">Source Folder</div>
+          <div style="display:flex;gap:6px">
+            <input class="form-input" style="font-size:11px;font-family:var(--font-head)" readonly value="${esc(p.source)}" placeholder="None selected" id="src-${i}">
+            <button class="btn btn-ghost btn-sm" onclick="pickPairFolder(${i},'source')">📁</button>
+          </div>
+        </div>
+        <div>
+          <div class="form-label">Destination Folder</div>
+          <div style="display:flex;gap:6px">
+            <input class="form-input" style="font-size:11px;font-family:var(--font-head)" readonly value="${esc(p.dest)}" placeholder="None selected" id="dst-${i}">
+            <button class="btn btn-ghost btn-sm" onclick="pickPairFolder(${i},'dest')">📁</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function addPair() { S.pairs.push({ id: null, name: 'Folder Pair '+(S.pairs.length+1), source:'', dest:'' }); renderPairs(); }
+function removePair(i) { S.pairs.splice(i,1); renderPairs(); }
+async function pickPairFolder(i, which) {
+  const folder = await window.API.pickFolder(); if (!folder) return;
+  S.pairs[i][which] = folder;
+  document.getElementById(which==='source'?`src-${i}`:`dst-${i}`).value = folder;
+}
+async function saveTask() {
+  const name = document.getElementById('taskName').value.trim();
+  const recipient = document.getElementById('taskRecipient').value.trim();
+  const time = document.getElementById('schedTime').value;
+  const days = [...document.querySelectorAll('.sched-day:checked')].map(c=>c.value).join(',');
+  if (!name||!recipient||!time) { notify('Fill in name, recipient and time.','err'); return; }
+  const task = { name, recipient, schedule: time+(days?':'+days:''), folderPairs: S.pairs };
+  if (S.editTaskId) { task.id=S.editTaskId; S.tasks = await window.API.updateTask(task); }
+  else S.tasks = await window.API.createTask(task);
+  renderTasks(); closeTaskModal(); notify('✅ Task saved','ok');
+}
+
+/* ════════════════════════════════
+   SEND NOW
+════════════════════════════════ */
+async function pickSendFiles() {
+  const files = await window.API.pickFiles(); S.sendFiles.push(...files); renderSendFiles();
+}
+function renderSendFiles() {
+  document.getElementById('sendFileList').innerHTML = S.sendFiles.map((f,i) => `
+    <div class="file-chip">📄 ${esc(f.split('/').pop())} <span class="file-chip-remove" onclick="removeSendFile(${i})">✕</span></div>`).join('');
+}
+function removeSendFile(i) { S.sendFiles.splice(i,1); renderSendFiles(); }
+function clearSendForm() {
+  ['sendTo','sendSubject','sendBody','sendCc','sendBcc'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  S.sendFiles = []; renderSendFiles();
+  const si = document.getElementById('multiEncSummary');
+  if (si) si.style.display = 'none';
+  // Reset password protect
+  const tog = document.getElementById('pwProtectToggle');
+  if (tog) { tog.checked = false; onPwToggle(); }
+  const pf = document.getElementById('pwField');
+  if (pf) pf.value = '';
+  updateEncIndicator();
+}
+
+async function updateEncIndicator() {
+  const toEmail = document.getElementById('sendTo').value.trim();
+  const el      = document.getElementById('encIndicator');
+  const summary = document.getElementById('multiEncSummary');
+
+  const parseMails = id => (document.getElementById(id)?.value || '')
+    .split(',').map(e => e.trim()).filter(Boolean);
+  const ccEmails  = parseMails('sendCc');
+  const bccEmails = parseMails('sendBcc');
+  const allEmails = [...(toEmail ? [toEmail] : []), ...ccEmails, ...bccEmails];
+
+  if (!toEmail) {
+    el.className = 'enc-indicator enc-none';
+    el.textContent = '\uD83D\uDD13 No encryption (add contact to enable)';
+    if (summary) summary.style.display = 'none';
+    return;
+  }
+
+  const modeStatus = (c) => {
+    if (!c) return { label: '\uD83D\uDD13 No contact', cls: 'enc-none' };
+    const kem = c.mlkem_pub ? `X25519+ML-KEM-${c.mlkem_variant || '768'}` : 'X25519';
+    return {
+      none:          { label: '\uD83D\uDD13 No encryption',               cls: 'enc-none'          },
+      selfcontained: { label: '\uD83D\uDD12 Self-Contained',              cls: 'enc-selfcontained' },
+      registry:      { label: `\uD83D\uDDDD Key Registry (${kem}+${c.cipher === 'chacha20-poly1305' ? 'ChaCha20' : 'AES-GCM'})`,  cls: 'enc-registry'      },
+      openpgp:       { label: `\uD83D\uDEE1 OpenPGP (${c.pgp_compat ? 'v4-compat' : c.cipher === 'chacha20-poly1305' ? 'ChaCha20+AEAD' : 'AES-GCM+AEAD'})`, cls: 'enc-openpgp' }
+    }[c.enc_mode] || { label: c.enc_mode, cls: 'enc-none' };
+  };
+
+  const toContact = S.contacts.find(c => c.email === toEmail);
+  const toStatus  = modeStatus(toContact);
+  el.className    = 'enc-indicator ' + toStatus.cls;
+  el.textContent  = toStatus.label + (toContact ? '' : ' — add to Contacts to configure');
+
+  // Show password protect row only for Self-Contained mode
+  const pwRow = document.getElementById('pwRow');
+  if (pwRow) {
+    const isSelfContained = (toContact?.enc_mode || 'selfcontained') === 'selfcontained';
+    pwRow.classList.toggle('visible', isSelfContained && !!toContact);
+    if (!isSelfContained || !toContact) {
+      const tog = document.getElementById('pwProtectToggle');
+      if (tog) { tog.checked = false; onPwToggle(); }
+    }
+  }
+
+  if (summary) {
+    if (allEmails.length <= 1) { summary.style.display = 'none'; return; }
+
+    const rows = allEmails.map(email => {
+      const role = email === toEmail ? 'To' : ccEmails.includes(email) ? 'CC' : 'BCC';
+      const c    = S.contacts.find(c => c.email === email);
+      const st   = modeStatus(c);
+      return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">` +
+        `<span style="min-width:30px;color:var(--text3);font-size:11px">${role}</span>` +
+        `<span style="flex:1;color:var(--text)">${email}</span>` +
+        `<span class="enc-indicator ${st.cls}" style="font-size:11px;padding:2px 8px">${st.label}</span>` +
+        `</div>`;
+    });
+
+    const modes = [...new Set(allEmails.map(e => {
+      const c = S.contacts.find(c => c.email === e);
+      return c?.enc_mode || 'selfcontained';
+    }))];
+    const mixedWarn = modes.length > 1
+      ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:var(--amber);font-size:11px">\u26A0 Mixed encryption modes \u2014 recipients will be grouped by mode and receive separate encrypted emails.</div>`
+      : '';
+
+    summary.innerHTML = `<div style="font-weight:600;margin-bottom:8px;font-size:12px">Encryption per recipient:</div>${rows.join('')}${mixedWarn}`;
+    summary.style.display = 'block';
+  }
+}
+
+
+/* ════════════════════════════════
+   PASSWORD PROTECT
+════════════════════════════════ */
+async function genPassword() {
+  const pwd = await window.API.generatePassword();
+  document.getElementById('pwField').value = pwd;
+}
+function copyPw() {
+  const val = document.getElementById('pwField')?.value;
+  if (val) { navigator.clipboard.writeText(val); notify('Password copied to clipboard.', 'ok'); }
+}
+function onPwToggle() {
+  const on   = document.getElementById('pwProtectToggle').checked;
+  const wrap = document.getElementById('pwGenWrap');
+  wrap.style.display = on ? 'flex' : 'none';
+  if (on && !document.getElementById('pwField').value) genPassword();
+}
+function closePwModal() {
+  document.getElementById('pwDeliveryModal').style.display = 'none';
+  S.lastPassword = null;
+  // Reset the toggle ready for next send
+  const tog = document.getElementById('pwProtectToggle');
+  if (tog) { tog.checked = false; onPwToggle(); }
+  document.getElementById('pwField').value = '';
+}
+function copyPwFromModal() {
+  if (S.lastPassword) {
+    navigator.clipboard.writeText(S.lastPassword);
+    notify('Password copied to clipboard.', 'ok');
+  }
+}
+function sendViaMessages() {
+  const pw   = S.lastPassword || '';
+  const body = encodeURIComponent(`Here is the password for your encrypted email: ${pw}`);
+  // sms: URI opens Messages on Mac with the body pre-filled; recipient pre-filled if available
+  const recipient = S.lastRecipient || '';
+  window.API.openExternal(`sms:${recipient}?&body=${body}`);
+}
+
+async function doSendNow() {
+  if (!S.authed) { notify('Please connect Gmail first.','err'); return; }
+  const recipient = document.getElementById('sendTo').value.trim();
+  const subject   = document.getElementById('sendSubject').value.trim();
+  const body      = document.getElementById('sendBody').value.trim();
+  const parseMails = id => (document.getElementById(id)?.value || '')
+    .split(',').map(e => e.trim()).filter(Boolean);
+  const cc  = parseMails('sendCc');
+  const bcc = parseMails('sendBcc');
+  if (!recipient || !subject || !body) { notify('Fill in recipient, subject and body.','err'); return; }
+
+  // Password protection — only active for Self-Contained mode
+  const pwActive  = document.getElementById('pwProtectToggle')?.checked;
+  const password  = pwActive ? (document.getElementById('pwField')?.value.trim() || null) : null;
+  if (pwActive && !password) { notify('Generate or enter a password before sending.','err'); return; }
+
+  const allCount = 1 + cc.length + bcc.length;
+  notify(`Encrypting and sending to ${allCount} recipient${allCount > 1 ? 's' : ''}…`, 'ok');
+  try {
+    const result = await window.API.sendNow({ recipient, cc, bcc, subject, body, files: S.sendFiles, taskName: 'Manual Send', password });
+    notify(`✅ Email sent successfully to ${allCount} recipient${allCount > 1 ? 's' : ''}!`, 'ok');
+    S.sendFiles = []; renderSendFiles();
+    ['sendCc','sendBcc'].forEach(id => { document.getElementById(id).value = ''; });
+    updateEncIndicator();
+
+    // Show password delivery modal if password was used
+    if (result?.password) {
+      S.lastPassword   = result.password;
+      S.lastRecipient  = result.iMessageHandle || recipient;
+
+      if (result.iMessageSent) {
+        // iMessage was sent automatically — brief success modal, no need to show QR
+        document.getElementById('pwModalTitle').textContent = '✅ Password Sent via iMessage';
+        document.getElementById('pwModalSub').innerHTML =
+          `The password was automatically sent to <strong>${result.iMessageHandle}</strong> via iMessage.<br>` +
+          `The recipient should receive it within seconds.`;
+        document.getElementById('pwFallbackSection').style.display = 'none';
+      } else {
+        // iMessage failed — show QR + manual options
+        const reason = result.iMessageError ? ` (${result.iMessageError})` : '';
+        document.getElementById('pwModalTitle').textContent = '⚠️ iMessage Failed — Share Manually';
+        document.getElementById('pwModalSub').innerHTML =
+          `Could not send automatically${reason}.<br>` +
+          `Use the QR code or copy button below, then send via iMessage, phone call, or in person.`;
+        document.getElementById('pwDisplayText').textContent = result.password;
+        const qrImg = document.getElementById('pwQrImg');
+        if (result.passwordQR) {
+          qrImg.src = result.passwordQR;
+          qrImg.parentElement.style.display = 'flex';
+        } else {
+          qrImg.parentElement.style.display = 'none';
+        }
+        document.getElementById('pwFallbackSection').style.display = 'block';
+      }
+      document.getElementById('pwDeliveryModal').style.display = 'flex';
+    }
+  } catch(e) { notify('❌ ' + e.message, 'err'); }
+}
+
+/* ════════════════════════════════
+   CONTACTS
+════════════════════════════════ */
+async function loadContacts() {
+  S.contacts = await window.API.getContacts(); renderContacts();
+}
+function renderContacts() {
+  const el = document.getElementById('contactList');
+  if (!S.contacts.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No contacts yet. Add one to configure encryption.</div></div>'; return; }
+  el.innerHTML = S.contacts.map(contactCard).join('');
+}
+function contactCard(c) {
+  const modeIcons = { none:'🔓', selfcontained:'🔒', registry:'🗝', openpgp:'🛡' };
+  const modeLabels = { none:'No encryption', selfcontained:'Self-Contained', registry:'Key Registry', openpgp:'OpenPGP' };
+  const modeClasses = { none:'badge-red', selfcontained:'badge-amber', registry:'badge-green', openpgp:'badge-purple' };
+  const mode = c.enc_mode||'selfcontained';
+  const keys = [];
+  if (c.mlkem_pub)  keys.push(`<span class="badge badge-green">ML-KEM-${c.mlkem_variant || '768'}</span>`);
+  if (c.x25519_pub) keys.push('<span class="badge badge-blue">X25519</span>');
+  if (c.pgp_pub)    keys.push('<span class="badge badge-purple">PGP</span>');
+  if (c.enc_mode === 'registry') {
+    const cLabel = c.cipher === 'chacha20-poly1305' ? 'ChaCha20-Poly1305' : 'AES-256-GCM';
+    const cClass = c.cipher === 'chacha20-poly1305' ? 'badge-amber' : 'badge-blue';
+    keys.push(`<span class="badge ${cClass}">${cLabel}</span>`);
+  }
+  return `
+  <div class="contact-card">
+    <div class="contact-avatar">${esc(c.name[0]||'?').toUpperCase()}</div>
+    <div class="contact-info">
+      <div class="contact-name">${esc(c.name)}</div>
+      <div class="contact-email">${esc(c.email)}</div>
+      <div class="contact-keys">
+        <span class="badge ${modeClasses[mode]}">${modeIcons[mode]} ${modeLabels[mode]}</span>
+        ${keys.join('')}
+      </div>
+    </div>
+    <div class="contact-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openContactModal('${esc(c.email)}')">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteContact('${c.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+const ENC_DESCS = {
+  selfcontained: '<strong>Self-Contained</strong> — Encrypts the message and bundles a one-time decryption key into a single HTML file. Recipients open it in any browser — no software needed. ⚠️ If the email is intercepted, the key travels with the ciphertext. Best for low-sensitivity sends or first contact.',
+  registry: '<strong>Key Registry</strong> — You store the recipient\'s public keys here (ML-KEM-768 or ML-KEM-1024 + X25519). Symmetric cipher is configurable: AES-256-GCM or ChaCha20-Poly1305. Only someone with their private key can decrypt. Quantum-resistant. <em>Recommended default for known contacts. Use ML-KEM-1024 for highest security.</em>',
+  openpgp: '<strong>OpenPGP</strong> — Standard OpenPGP encryption, compatible with Thunderbird, GPG, and all major email clients. Uses the recipient\'s PGP public key. No additional software needed on your end.',
+  none: '<strong>No encryption</strong> — Email is sent in plain text. Not recommended except for testing or unimportant content.'
+};
+
+function selectEncMode(mode) {
+  S.selectedEncMode = mode;
+  document.querySelectorAll('.enc-mode-btn').forEach(b => { b.classList.toggle('selected', b.dataset.mode===mode); });
+  document.getElementById('encModeDesc').innerHTML = ENC_DESCS[mode] || '';
+  document.getElementById('registryFields').style.display = mode==='registry' ? 'block' : 'none';
+  document.getElementById('pgpFields').style.display = mode==='openpgp' ? 'block' : 'none';
+}
+
+function openContactModal(email = null) {
+  S.editContactEmail = email;
+  document.getElementById('contactModalTitle').textContent = email ? 'Edit Contact' : 'Add Contact';
+  if (email) {
+    const c = S.contacts.find(c => c.email===email);
+    if (c) {
+      document.getElementById('cName').value = c.name||'';
+      document.getElementById('cEmail').value = c.email||'';
+      document.getElementById('cNotes').value = c.notes||'';
+      document.getElementById('cMlkemPub')?.setAttribute('value', c.mlkem_pub||'');
+      if (document.getElementById('cMlkemPub'))  document.getElementById('cMlkemPub').value  = c.mlkem_pub||'';
+      if (document.getElementById('cMlkemVariant')) document.getElementById('cMlkemVariant').value = c.mlkem_variant || '1024';
+      if (document.getElementById('cCipher'))       document.getElementById('cCipher').value       = c.cipher || 'aes-256-gcm';
+      if (document.getElementById('cImessageHandle')) document.getElementById('cImessageHandle').value = c.imessage_handle||'';
+      if (document.getElementById('cPgpCipher'))    document.getElementById('cPgpCipher').value    = c.cipher || 'aes-256-gcm';
+      if (document.getElementById('cPgpCompat'))    document.getElementById('cPgpCompat').checked  = !!(c.pgp_compat);
+      updatePgpCompatHint();
+      if (document.getElementById('cCipher'))       document.getElementById('cCipher').value       = c.cipher || 'aes-256-gcm';
+      if (document.getElementById('cX25519Pub')) document.getElementById('cX25519Pub').value = c.x25519_pub||'';
+      if (document.getElementById('cPgpPub'))    document.getElementById('cPgpPub').value    = c.pgp_pub||'';
+      selectEncMode(c.enc_mode||'selfcontained');
+    }
+  } else {
+    document.getElementById('cName').value=''; document.getElementById('cEmail').value='';
+    document.getElementById('cNotes').value='';
+    if (document.getElementById('cMlkemPub'))  document.getElementById('cMlkemPub').value='';
+    if (document.getElementById('cX25519Pub')) document.getElementById('cX25519Pub').value='';
+    if (document.getElementById('cPgpPub'))    document.getElementById('cPgpPub').value='';
+    if (document.getElementById('cCipher'))    document.getElementById('cCipher').value='aes-256-gcm';
+    if (document.getElementById('cImessageHandle')) document.getElementById('cImessageHandle').value='';
+    if (document.getElementById('cPgpCipher')) document.getElementById('cPgpCipher').value='aes-256-gcm';
+    if (document.getElementById('cPgpCompat')) { document.getElementById('cPgpCompat').checked=false; updatePgpCompatHint(); }
+    selectEncMode('selfcontained');
+  }
+  document.getElementById('contactModal').classList.add('open');
+}
+function closeContactModal() { document.getElementById('contactModal').classList.remove('open'); }
+
+function updatePgpCompatHint() {
+  const hint   = document.getElementById('pgpCompatHint');
+  const compat = document.getElementById('cPgpCompat')?.checked;
+  const cipher = document.getElementById('cPgpCipher')?.value;
+  if (!hint) return;
+  if (compat) {
+    hint.style.display = 'block';
+    hint.textContent = '⚠ Legacy mode active — AEAD and ChaCha20 are disabled. Messages will use CFB mode (OpenPGP v4 format), readable by GPG 2.2+ and older Thunderbird.';
+  } else if (cipher === 'chacha20-poly1305') {
+    hint.style.display = 'block';
+    hint.textContent = 'ℹ ChaCha20-Poly1305 requires openpgp.js v6 (run: npm install openpgp@^6.0.0) and the recipient must use GPG 2.4.7+ or Thunderbird 128+.';
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
+async function saveContact() {
+  const name  = document.getElementById('cName').value.trim();
+  const email = document.getElementById('cEmail').value.trim();
+  if (!name||!email) { notify('Name and email are required.','err'); return; }
+  const contact = {
+    name, email, enc_mode: S.selectedEncMode,
+    mlkem_variant: document.getElementById('cMlkemVariant')?.value || '1024',
+    cipher:       document.getElementById('cCipher')?.value || 'aes-256-gcm',
+    cipher:      S.selectedEncMode === 'openpgp'
+      ? (document.getElementById('cPgpCipher')?.value || 'aes-256-gcm')
+      : (document.getElementById('cCipher')?.value || 'aes-256-gcm'),
+    pgp_compat:  document.getElementById('cPgpCompat')?.checked || false,
+    mlkem_pub:   document.getElementById('cMlkemPub')?.value.trim()||null,
+    x25519_pub:  document.getElementById('cX25519Pub')?.value.trim()||null,
+    pgp_pub:        document.getElementById('cPgpPub')?.value.trim()||null,
+    imessage_handle: document.getElementById('cImessageHandle')?.value.trim()||null,
+    notes:          document.getElementById('cNotes').value.trim()||null
+  };
+  S.contacts = await window.API.upsertContact(contact);
+  renderContacts(); closeContactModal(); notify('✅ Contact saved','ok');
+  updateEncIndicator();
+}
+async function deleteContact(id) {
+  if (!confirm('Delete this contact?')) return;
+  S.contacts = await window.API.deleteContact(id); renderContacts();
+}
+
+/* ════════════════════════════════
+   MY KEYS
+════════════════════════════════ */
+async function loadMyKeys() {
+  S.myKeys = await window.API.getMyKeys();
+  renderMyKeys();
+}
+function renderMyKeys() {
+  const el = document.getElementById('myKeysBody');
+  if (!S.myKeys) {
+    el.innerHTML = `
+      <div class="keys-panel">
+        <div class="keys-title">🔑 No keys found</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Generate your identity keypairs to enable encryption. Your private keys are stored locally and never leave this machine.</p>
+        <div class="grid-2" style="max-width:500px;margin-bottom:16px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Your Name</label>
+            <input type="text" class="form-input" id="keyName" placeholder="Peter">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Your Email</label>
+            <input type="email" class="form-input" id="keyEmail" placeholder="peter@example.com">
+          </div>
+        </div>
+        <div class="form-group" style="max-width:500px;margin-bottom:16px">
+          <label class="form-label">Post-Quantum KEM Strength</label>
+          <select class="form-input" id="kemVariantSelect" style="cursor:pointer">
+            <option value="1024" selected>ML-KEM-1024 — Highest security (recommended, NIST FIPS 203 Level 5)</option>
+            <option value="768">ML-KEM-768 — High security (NIST FIPS 203 Level 3)</option>
+          </select>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">ML-KEM-1024 uses slightly larger keys (~1.5 KB vs ~1.1 KB) but provides the strongest post-quantum protection available.</div>
+        </div>
+        <button class="btn btn-primary" onclick="generateKeys()">🔑 Generate My Keys</button>
+      </div>`;
+    return;
+  }
+  const k = S.myKeys;
+  el.innerHTML = `
+    <div class="keys-panel">
+      <div class="keys-title">🔑 Your Identity Keypairs
+        <span class="badge badge-green" style="margin-left:8px">Active</span>
+      </div>
+      <div class="key-row"><span class="key-label">Identity:</span> <span class="key-value">${esc(k.name)} &lt;${esc(k.email)}&gt;</span></div>
+      <div class="key-row"><span class="key-label">Created:</span> <span style="font-size:12px;color:var(--text2)">${fmtDate(k.created_at)}</span></div>
+      <div class="key-row"><span class="key-label">Post-Quantum KEM:</span> ${k.has_mlkem ? `<span class="key-check">✓ ML-KEM-${k.mlkem_variant || '768'} + X25519${k.mlkem_variant === '1024' ? ' <span style="color:var(--green);font-size:11px">(highest security)</span>' : ''}</span>` : '<span class="key-x">✗ Unavailable — run: npm install @noble/post-quantum</span>'}</div>
+      <div class="key-row"><span class="key-label">X25519 (fallback):</span> <span class="key-check">✓</span> <span class="key-value">${k.x25519_pub?.slice(0,24)}…</span></div>
+      <div class="key-row"><span class="key-label">OpenPGP:</span> ${k.has_pgp ? '<span class="key-check">✓</span>' : '<span class="key-x">✗ Not available (npm install openpgp)</span>'}</div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn btn-ghost btn-sm" onclick="exportMyKeys()">📋 Export My Public Keys</button>
+        <button class="btn btn-danger btn-sm" onclick="regenKeys()">🔄 Regenerate Keys</button>
+      </div>
+    </div>
+    <div id="exportBox" style="display:none;margin-top:0">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Share this JSON with contacts who want to encrypt to you (Key Registry or OpenPGP mode):</div>
+      <div class="export-box" id="exportContent"></div>
+      <button class="btn btn-ghost btn-sm" onclick="copyExport()" style="margin-top:8px">📋 Copy</button>
+    </div>
+    <div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">How key exchange works</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">
+        <strong>1.</strong> You click <em>Export My Public Keys</em> and send the JSON to your contact (via Signal, in person, etc.)<br>
+        <strong>2.</strong> They add you as a contact in their app, paste your public keys, and set mode to Key Registry.<br>
+        <strong>3.</strong> They do the same — export their keys and send to you.<br>
+        <strong>4.</strong> You paste their public keys in their Contact entry here.<br>
+        <strong>5.</strong> From now on, all emails between you are encrypted end-to-end. 🔒
+      </div>
+    </div>`;
+}
+async function generateKeys() {
+  const name       = document.getElementById('keyName').value.trim();
+  const email      = document.getElementById('keyEmail').value.trim();
+  const kemVariant = document.getElementById('kemVariantSelect')?.value || '1024';
+  if (!name||!email) { notify('Enter your name and email.','err'); return; }
+  notify(`Generating keypairs (ML-KEM-${kemVariant})…`,'ok');
+  S.myKeys = await window.API.generateMyKeys({ name, email, kemVariant });
+  renderMyKeys(); notify(`✅ Keys generated! (ML-KEM-${kemVariant} + X25519 + OpenPGP)`,'ok');
+}
+async function exportMyKeys() {
+  const json = await window.API.exportMyPubkey();
+  if (!json) { notify('No keys found.','err'); return; }
+  document.getElementById('exportBox').style.display = 'block';
+  document.getElementById('exportContent').textContent = json;
+}
+function copyExport() {
+  const txt = document.getElementById('exportContent').textContent;
+  navigator.clipboard.writeText(txt).then(() => notify('📋 Copied!','ok'));
+}
+async function regenKeys() {
+  if (!confirm('Regenerate keys? Contacts who have your current keys will no longer be able to encrypt to you until you re-exchange.')) return;
+  document.getElementById('myKeysBody').innerHTML = '<div class="empty"><div class="empty-icon">🔑</div><div class="empty-text">Regenerating…</div></div>';
+  S.myKeys = null;
+  renderMyKeys();
+}
+
+/* ════════════════════════════════
+   CHECKSUMS
+════════════════════════════════ */
+async function loadChecksums() {
+  const rows = await window.API.getChecksums();
+  const tbody = document.getElementById('checksumBody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No checksums yet</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => `<tr><td>${esc(r.file_name)}</td><td class="mono" title="${esc(r.sha256)}">${r.sha256.slice(0,12)}…</td><td>${fmtBytes(r.size_bytes)}</td><td>${esc(r.task_id||'—')}</td><td>${fmtDate(r.computed_at)}</td></tr>`).join('');
+}
+
+/* ════════════════════════════════
+   RECEIPTS
+════════════════════════════════ */
+async function loadReceipts() {
+  const rows = await window.API.getReceipts();
+  const el = document.getElementById('receiptList');
+  if (!rows.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">No receipts yet</div></div>'; return; }
+  el.innerHTML = rows.map(r => `
+    <div class="receipt-card">
+      <div class="receipt-info">
+        <div class="receipt-title">${esc(r.subject)}</div>
+        <div class="receipt-meta">📧 ${esc(r.recipient)} · 📋 ${esc(r.task_name||'Manual')}<br>🕐 ${fmtDate(r.sent_at)}</div>
+        <div class="receipt-files">📎 ${esc(r.file_names)}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="showQR('${r.id}','${esc(r.subject)}')">📱 QR</button>
+    </div>`).join('');
+}
+async function showQR(id, subject) {
+  const qr = await window.API.getReceiptQR(id);
+  if (!qr) { notify('QR not available','err'); return; }
+  document.getElementById('qrDetails').textContent = subject;
+  document.getElementById('qrImg').src = qr;
+  document.getElementById('qrModal').classList.add('open');
+}
+function closeQrModal() { document.getElementById('qrModal').classList.remove('open'); }
+
+/* ════════════════════════════════
+   VOICE
+════════════════════════════════ */
+let recognition, voiceActive = false;
+function toggleVoice(fieldId) {
+  if (voiceActive) { recognition?.stop(); voiceActive=false; document.getElementById('voiceBtn').classList.remove('recording'); return; }
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!R) { notify('Speech recognition not supported','err'); return; }
+  recognition = new R(); recognition.continuous=true; recognition.interimResults=true; recognition.lang='en-GB';
+  recognition.onresult = e => {
+    let t = '';
+    for (let i=e.resultIndex; i<e.results.length; i++) if (e.results[i].isFinal) t += e.results[i][0].transcript;
+    if (t) { const el=document.getElementById(fieldId); el.value+=(el.value?' ':'')+t.trim(); }
+  };
+  recognition.onend = () => { voiceActive=false; document.getElementById('voiceBtn').classList.remove('recording'); };
+  recognition.start(); voiceActive=true; document.getElementById('voiceBtn').classList.add('recording');
+}
+
+/* ════════════════════════════════
+   UTILS
+════════════════════════════════ */
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function shortPath(p) { if(!p)return'—'; const pts=p.split(/[/\\]/); return pts.length>3?'…/'+pts.slice(-2).join('/'):p; }
+function fmtBytes(b) { if(!b)return'—'; if(b<1024)return b+' B'; if(b<1048576)return(b/1024).toFixed(1)+' KB'; return(b/1048576).toFixed(1)+' MB'; }
+function fmtDate(s) { if(!s)return'—'; try { const d=new Date(s); return d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); } catch{return s;} }
+
+let notifTimer;
+function notify(msg, type='ok') {
+  const el = document.getElementById('notif');
+  el.textContent=msg; el.className='notif show notif-'+type;
+  clearTimeout(notifTimer); notifTimer=setTimeout(()=>el.classList.remove('show'), 4000);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+init();
+
+
+/* ═══════════════════════════════════════════
+   YOUTUBE TRANSCRIPTION
+═══════════════════════════════════════════ */
+const YT = {
+  info:       null,
+  transcript: null,
+  audioPath:  null,
+  outputDir:  null,
+  selectedVideoItag: null,
+  selectedAudioItag: null,
+  audioConvertFmt:   'mp3',
+  exportFmts:        new Set(['txt','srt','vtt','md'])
+};
+
+async function initTranscribePage() {
+  try {
+  // Load saved API key
+  const key = await window.API.ytGetOpenAIKey().catch(()=>null);
+  if (key) document.getElementById('ytApiKey').value = key;
+
+  // Wire export format buttons
+  document.getElementById('exportFmtBtns').querySelectorAll('.export-fmt-btn').forEach(btn => {
+    const fmt = btn.dataset.fmt;
+    if (YT.exportFmts.has(fmt)) btn.classList.add('on');
+    btn.onclick = () => {
+      btn.classList.toggle('on');
+      if (btn.classList.contains('on')) YT.exportFmts.add(fmt);
+      else YT.exportFmts.delete(fmt);
+    };
+  });
+
+  // Wire audio convert format buttons
+  document.getElementById('audioConvertBtns').querySelectorAll('.export-fmt-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.getElementById('audioConvertBtns').querySelectorAll('.export-fmt-btn').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      YT.audioConvertFmt = btn.dataset.afmt;
+    };
+  });
+
+  // Progress listener
+  window.API.on('yt-progress', ({ pct, phase, downloaded, total }) => {
+    ['ytDlBar','ytTransBar'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.width = pct + '%';
+    });
+    const mb = downloaded ? ` — ${(downloaded/1024/1024).toFixed(1)} MB` : '';
+    const tot = total     ? ` / ${(total/1024/1024).toFixed(1)} MB` : '';
+    const label = (phase || 'Working…') + mb + tot;
+    ['ytDlStatus','ytTransStatus'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = label;
+    });
+  });
+  } catch(e) {
+    console.error('initTranscribePage error:', e);
+    notify('Transcribe page error: ' + e.message, 'err');
+  }
+}
+
+async function saveYtKey() {
+  const key = document.getElementById('ytApiKey').value.trim();
+  if (!key.startsWith('sk-')) { notify('Invalid OpenAI key format','err'); return; }
+  await window.API.ytSaveOpenAIKey(key);
+  notify('✅ API key saved','ok');
+}
+
+async function fetchYtInfo() {
+  const url = document.getElementById('ytUrl').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('ytFetchBtn');
+  btn.textContent = 'Fetching…'; btn.disabled = true;
+  try {
+    YT.info = await window.API.ytInfo(url);
+    renderYtInfo();
+    document.getElementById('ytDownloadSection').style.display = 'block';
+    document.getElementById('ytVideoCard').style.display = 'block';
+  } catch(e) {
+    notify('Failed: ' + e.message, 'err');
+  } finally {
+    btn.textContent = 'Fetch'; btn.disabled = false;
+  }
+}
+
+function renderYtInfo() {
+  const v = YT.info;
+  document.getElementById('ytThumb').src = v.thumbnail || '';
+  document.getElementById('ytTitle').textContent = v.title;
+  const dur = v.duration ? `${Math.floor(v.duration/60)}:${String(v.duration%60).padStart(2,'0')}` : '—';
+  document.getElementById('ytMeta').textContent = `${v.author || ''}  ·  ${dur}`;
+  document.getElementById('ytDesc').textContent = v.description || '';
+
+  // Video formats
+  const videoFmts = v.formats.filter(f => f.hasVideo && f.hasAudio)
+    .sort((a,b) => parseInt(b.qualityLabel||0) - parseInt(a.qualityLabel||0))
+    .slice(0,8);
+  const audioFmts = v.formats.filter(f => !f.hasVideo && f.hasAudio)
+    .sort((a,b) => (b.audioBitrate||0) - (a.audioBitrate||0))
+    .slice(0,6);
+
+  renderFormatChips('videoFormats', videoFmts, 'video');
+  renderFormatChips('audioFormats', audioFmts, 'audio');
+}
+
+function renderFormatChips(containerId, formats, type) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  if (!formats.length) { container.innerHTML = '<div style="font-size:12px;color:var(--text3)">No formats available</div>'; return; }
+  formats.forEach((f, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'format-chip' + (i===0 ? ' selected' : '');
+    if (i === 0) {
+      if (type === 'video') YT.selectedVideoItag = f.itag;
+      else YT.selectedAudioItag = f.itag;
+    }
+    const quality = f.qualityLabel || (f.audioBitrate ? f.audioBitrate + 'kbps' : '?');
+    const size    = f.contentLength ? f.contentLength + ' MB' : '';
+    chip.innerHTML = `<div class="fc-label">${quality}</div><div class="fc-meta">${f.container || ''} ${size}</div>`;
+    chip.onclick = () => {
+      container.querySelectorAll('.format-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      if (type === 'video') YT.selectedVideoItag = f.itag;
+      else YT.selectedAudioItag = f.itag;
+    };
+    container.appendChild(chip);
+  });
+}
+
+async function pickYtOutputDir() {
+  const dir = await window.API.ytPickOutputDir();
+  if (dir) {
+    YT.outputDir = dir;
+    document.getElementById('ytOutputDir').value = dir;
+  }
+}
+
+async function doYtDownload() {
+  const url  = document.getElementById('ytUrl').value.trim();
+  const itag = YT.selectedAudioItag || YT.selectedVideoItag;
+  if (!itag) { notify('Select a format first','err'); return; }
+
+  const info = YT.info;
+  const safe = (info?.title || 'video').replace(/[^\w\s\-]/g,'').trim().slice(0,50).replace(/\s+/g,'_');
+  const fmt  = YT.info?.formats?.find(f => f.itag === itag);
+  const ext  = fmt?.container || 'mp4';
+  const outPath = (YT.outputDir ? YT.outputDir : '~/Downloads') + '/' + safe + '.' + ext;
+
+  setYtDlProgress(true);
+  try {
+    const downloaded = await window.API.ytDownload({ url, itag, outputPath: outPath });
+    // Convert audio if needed
+    if (YT.audioConvertFmt !== ext) {
+      const convertOut = outPath.replace('.' + ext, '.' + YT.audioConvertFmt);
+      document.getElementById('ytDlStatus').textContent = 'Converting to ' + YT.audioConvertFmt.toUpperCase() + '…';
+      await window.API.ytConvertAudio({ inputPath: downloaded, outputPath: convertOut, format: YT.audioConvertFmt });
+      YT.audioPath = convertOut;
+      notify('✅ Saved: ' + convertOut.split('/').pop(), 'ok');
+    } else {
+      YT.audioPath = downloaded;
+      notify('✅ Saved: ' + downloaded.split('/').pop(), 'ok');
+    }
+  } catch(e) {
+    notify('Download failed: ' + e.message, 'err');
+  } finally {
+    setYtDlProgress(false);
+  }
+}
+
+async function doYtDownloadAndTranscribe() {
+  await doYtDownload();
+  if (YT.audioPath) await runTranscription();
+}
+
+async function doTranscribeOnly() {
+  // Pick audio file
+  const files = await window.API.pickFiles().catch(()=>null);
+  if (!files?.length) return;
+  YT.audioPath = files[0];
+  await runTranscription();
+}
+
+async function runTranscription() {
+  const key  = document.getElementById('ytApiKey').value.trim();
+  const lang = document.getElementById('ytLang').value;
+  if (!key) { notify('OpenAI API key required — enter it at the top','err'); return; }
+
+  document.getElementById('ytTransProgress').style.display = 'block';
+  document.getElementById('ytTranscriptOut').style.display = 'none';
+  document.getElementById('ytTransBar').style.width = '5%';
+  document.getElementById('ytTransStatus').textContent = 'Uploading audio to Whisper…';
+
+  try {
+    YT.transcript = await window.API.ytTranscribe({ audioPath: YT.audioPath, openaiKey: key, language: lang || undefined });
+    renderTranscript(YT.transcript);
+    document.getElementById('ytTranscriptOut').style.display = 'block';
+    notify('✅ Transcription complete','ok');
+  } catch(e) {
+    notify('Transcription failed: ' + e.message, 'err');
+  } finally {
+    document.getElementById('ytTransProgress').style.display = 'none';
+  }
+}
+
+function renderTranscript(t) {
+  const box  = document.getElementById('ytTranscriptBox');
+  const segs = t.segments || [];
+  if (!segs.length) { box.textContent = t.text || '(empty)'; return; }
+  box.innerHTML = segs.map(s => {
+    const m  = Math.floor(s.start / 60);
+    const sc = Math.floor(s.start % 60);
+    const ts = `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+    return `<div class="transcript-seg"><span class="seg-time">[${ts}]</span> ${s.text.trim()}</div>`;
+  }).join('');
+}
+
+async function copyTranscript() {
+  const text = YT.transcript?.text || YT.transcript?.segments?.map(s=>s.text).join(' ') || '';
+  navigator.clipboard.writeText(text).then(() => notify('Copied to clipboard','ok'));
+}
+
+async function saveTranscript() {
+  if (!YT.transcript) { notify('No transcript to save','err'); return; }
+  try {
+    const result = await window.API.ytSaveTranscript({
+      transcript: YT.transcript,
+      videoInfo:  YT.info,
+      formats:    [...YT.exportFmts],
+      outputDir:  YT.outputDir
+    });
+    notify(`✅ Saved ${result.saved.length} file(s) to ${result.dir.split('/').pop()}`, 'ok');
+  } catch(e) {
+    notify('Save failed: ' + e.message, 'err');
+  }
+}
+
+function setYtDlProgress(show) {
+  document.getElementById('ytDlProgress').style.display = show ? 'block' : 'none';
+  document.getElementById('ytDlBar').style.width = show ? '2%' : '0%';
+  document.getElementById('ytDownloadBtn').disabled = show;
+  document.getElementById('ytDlTransBtn').disabled  = show;
+}
+
+
+/* ═══════════════════════════════════════════
+   USER GUIDE
+═══════════════════════════════════════════ */
+function openGuide() {
+  document.getElementById('guideModal').classList.add('open');
+  document.getElementById('guideModal').scrollTop = 0;
+}
+function closeGuide() {
+  document.getElementById('guideModal').classList.remove('open');
+}
+// Close on backdrop click
+document.getElementById('guideModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('guideModal')) closeGuide();
+});
+// Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeGuide();
+});
+// Smooth scroll for TOC links
+document.querySelectorAll('.guide-toc a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const id = a.getAttribute('href').slice(1);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+/* transcribe init now handled in main nav handler above */
+
+
+
+
+/* ════════════════════════════════
+   SETUP / DIAGNOSTICS
+════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   ADMIN PAGE
+════════════════════════════════════════════════ */
+let adminUnlocked = false;
+
+function initAdminPage() {
+  if (adminUnlocked) {
+    document.getElementById('adminLockScreen').style.display = 'none';
+    document.getElementById('adminContent').style.display    = 'block';
+    loadIssuedLog();
+  } else {
+    document.getElementById('adminLockScreen').style.display = 'flex';
+    document.getElementById('adminContent').style.display    = 'none';
+    document.getElementById('adminPinInput').value = '';
+    document.getElementById('adminPinError').style.display = 'none';
+    setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
+  }
+}
+
+async function checkAdminPin() {
+  const pin = document.getElementById('adminPinInput').value;
+  const res = await window.API.adminCheckPin(pin);
+  if (res.ok) {
+    adminUnlocked = true;
+    document.getElementById('adminLockScreen').style.display = 'none';
+    document.getElementById('adminContent').style.display    = 'block';
+    loadIssuedLog();
+  } else {
+    const err = document.getElementById('adminPinError');
+    err.textContent = 'Incorrect PIN. Try again.';
+    err.style.display = 'block';
+    document.getElementById('adminPinInput').value = '';
+    document.getElementById('adminPinInput').focus();
+  }
+}
+
+function adminExpiryDate(val) {
+  const now = new Date();
+  if (val === 'lifetime') return '2099-12-31';
+  if (val === '2y') return new Date(now.getFullYear() + 2, now.getMonth(), 1).toISOString();
+  return new Date(now.getFullYear() + 1, now.getMonth(), 1).toISOString();
+}
+
+async function adminGenStandardKey() {
+  const name   = document.getElementById('adminKeyName').value.trim();
+  const email  = document.getElementById('adminKeyEmail').value.trim();
+  const expiry = document.getElementById('adminKeyExpiry').value;
+  if (!email) { notify('Enter a customer email address', 'err'); return; }
+  const result = await window.API.adminGenStandard({ email, name, expiry });
+  if (result?.key) {
+    document.getElementById('adminStdKeyValue').textContent = result.key;
+    document.getElementById('adminStdKeyResult').style.display = 'block';
+    notify(`Key generated for ${email}`, 'ok');
+    loadIssuedLog();
+  }
+}
+
+async function adminGenWalkupKeys() {
+  const count  = parseInt(document.getElementById('adminWalkupCount').value) || 5;
+  const expiry = document.getElementById('adminWalkupExpiry').value;
+  const note   = document.getElementById('adminWalkupNote').value.trim() || 'Walk-up sale';
+  const result = await window.API.adminGenWalkup({ count, expiry, note });
+  if (result?.keys) {
+    const lines = result.keys.map(k => `${k.serial}.  ${k.key}    exp ${k.expiry}`).join('\n');
+    document.getElementById('adminWalkupKeyList').textContent = lines;
+    document.getElementById('adminWalkupResult').style.display = 'block';
+    notify(`${result.keys.length} walk-up keys generated`, 'ok');
+    loadIssuedLog();
+  }
+}
+
+function copyAdminKey(elId) {
+  const text = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(() => notify('Copied to clipboard', 'ok'));
+}
+
+async function loadIssuedLog() {
+  const el = document.getElementById('adminKeyLog');
+  const { entries } = await window.API.adminGetLog();
+  if (!entries.length) { el.textContent = 'No keys issued yet.'; return; }
+  el.innerHTML = entries.map(e => {
+    const type  = e.type === 'walkup' ? '🚶' : '📧';
+    const label = e.type === 'walkup'
+      ? `${type} Walk-up  #${e.serial}  <span style="color:var(--accent)">${e.key}</span>  exp ${e.expiry}  <span style="color:var(--text3)">${e.note||''}</span>`
+      : `${type} Standard  <span style="color:var(--text2)">${e.name||''}  ${e.email}</span>  <span style="color:var(--accent)">${e.key}</span>  exp ${e.expiry}`;
+    return `<div style="padding:3px 0;border-bottom:1px solid var(--border)">${label}<span style="color:var(--text3);float:right">${e.issuedAt?.slice(0,10)||''}</span></div>`;
+  }).join('');
+}
+
+async function adminClearLicence() {
+  if (!confirm('Reset the stored licence? The app will ask for a key on next launch.')) return;
+  await window.API.clearLicence();
+  const msg = document.getElementById('adminClearMsg');
+  msg.textContent = '✅ Licence cleared. Restart the app to see the licence screen.';
+  msg.style.display = 'block';
+}
+
+function showPage(name) {
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  const navEl = document.querySelector(`.nav-item[data-page="${name}"]`);
+  if (navEl) navEl.classList.add('active');
+  const pageEl = document.getElementById('page-' + name);
+  if (pageEl) pageEl.classList.add('active');
+}
+
+async function runDiagnostics() {
+  const authEl   = document.getElementById('setupAuthStatus');
+  const depsEl   = document.getElementById('setupDepsList');
+  const credEl   = document.getElementById('setupCredsStatus');
+  const ffmpegEl = document.getElementById('setupFfmpegStatus');
+  const btn      = document.getElementById('setupConnectBtn');
+
+  if (authEl) authEl.innerHTML = 'Checking…';
+  if (depsEl) depsEl.innerHTML = 'Checking…';
+
+  let diag;
+  try {
+    diag = await window.API.getDiagnostics();
+  } catch(e) {
+    if (depsEl) depsEl.innerHTML = `<span style="color:var(--red)">❌ getDiagnostics failed: ${esc(e.message)}<br>Make sure you replaced main.js and ran npm install.</span>`;
+    return;
+  }
+
+  // Auth status
+  if (authEl) {
+    if (diag.authed) {
+      authEl.innerHTML = '<span style="color:var(--green)">✅ Gmail is connected</span>';
+      if (btn) { btn.textContent = 'Sign Out'; btn.disabled = false; }
+    } else if (!diag.credentialsFound) {
+      authEl.innerHTML = '<span style="color:var(--red)">❌ credentials.json not found — see instructions below</span>';
+      if (btn) { btn.textContent = 'Connect Gmail'; btn.disabled = true; }
+    } else {
+      authEl.innerHTML = '<span style="color:var(--red)">❌ Not connected — click Connect Gmail</span>';
+      if (btn) { btn.textContent = 'Connect Gmail'; btn.disabled = false; }
+    }
+  }
+
+  // Credentials
+  if (credEl) {
+    credEl.innerHTML = diag.credentialsFound
+      ? `<span style="color:var(--green)">✅ Found (${diag.credentialsType})</span><br><span style="font-size:11px;color:var(--text3)">${esc(diag.credentialsPath)}</span>`
+      : `<span style="color:var(--red)">❌ Missing</span><br><span style="font-size:11px;color:var(--text3)">Expected: ${esc(diag.credentialsPath)}</span>`;
+    const credPathEl = document.getElementById('credPathDisplay');
+    if (credPathEl) credPathEl.textContent = diag.credentialsPath;
+  }
+
+  // Dependencies
+  if (depsEl) {
+    const depNames = {
+      'googleapis':              'Google APIs (Gmail)',
+      'sql.js':                  'SQLite (sql.js)',
+      'qrcode':                  'QR Code generator',
+      'openpgp':                 'OpenPGP.js',
+      '@noble/post-quantum':     'Post-Quantum Crypto (ML-KEM)',
+      '@distube/ytdl-core':      'YouTube Download',
+      'openai':                  'OpenAI SDK (Whisper)',
+      'fluent-ffmpeg':           'FFmpeg bindings'
+    };
+    const requiredVersions = { 'openpgp': 6 };
+    const rows = Object.entries(diag.modules).map(([mod, ok]) => {
+      const ver        = diag.modVersions?.[mod];
+      const majorNeeded = requiredVersions[mod];
+      const majorActual = ver ? parseInt(ver.split('.')[0]) : null;
+      const versionOk  = !majorNeeded || (majorActual !== null && majorActual >= majorNeeded);
+      const icon       = !ok ? '❌' : !versionOk ? '⚠️' : '✅';
+      const verLabel   = ver
+        ? `<code style="font-size:11px;color:${versionOk ? 'var(--text3)' : 'var(--amber)'}">v${ver}${!versionOk ? ` — needs v${majorNeeded}+` : ''}</code>`
+        : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span>${icon}</span>
+        <span style="flex:1;font-weight:600">${depNames[mod] || mod}</span>
+        ${verLabel}
+        <code style="font-size:11px;color:var(--text3)">${mod}</code>
+      </div>`;
+    }).join('');
+
+    // OpenPGP v6 capability row
+    let pgpRow = '';
+    if (diag.pgpVersion) {
+      const v6ok = diag.pgpV6Ok;
+      pgpRow = `<div style="padding:8px 12px;margin-top:8px;border-radius:6px;font-size:12px;background:${v6ok ? 'rgba(34,197,94,.08)' : 'rgba(245,158,11,.08)'};border:1px solid ${v6ok ? 'rgba(34,197,94,.3)' : 'rgba(245,158,11,.3)'}">
+        ${v6ok
+          ? `✅ <strong>OpenPGP v6 capable</strong> — ChaCha20-Poly1305 AEAD supported (v${diag.pgpVersion})`
+          : `⚠️ <strong>OpenPGP v5 detected</strong> (v${diag.pgpVersion}) — ChaCha20 and AEAD unavailable. Run <code>npm install</code> to upgrade to v6.`}
+      </div>`;
+    }
+
+    depsEl.innerHTML = rows + pgpRow + `<div style="margin-top:10px;font-size:11px;color:var(--text3)">Node ${esc(diag.nodeVersion)} · ${esc(diag.platform)}</div>`;
+  }
+
+  // ffmpeg
+  if (ffmpegEl) {
+    ffmpegEl.innerHTML = diag.ffmpeg
+      ? '<span style="color:var(--green)">✅ Available — audio conversion enabled</span>'
+      : '<span style="color:var(--amber)">⚠️ Not found — audio conversion disabled. Install: <code>brew install ffmpeg</code></span>';
+  }
+}
+
+</script>
+</body>
+</html>
